@@ -1,0 +1,8 @@
+.DS_Store
+*.swp
+*.rej
+*.orig
+*~
+
+# Deployed applications
+data/client/*
