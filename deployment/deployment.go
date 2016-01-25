@@ -1,3 +1,4 @@
+// Package deployment provides methods for managing application deployment and release files.
 package deployment
 
 import (
@@ -27,11 +28,12 @@ type Deployment struct {
 }
 
 // Initialize the local deployment object.
-func (d *Deployment) Init(appName, suffix, rootDir string, uid, gid int) error {
+// Currently supports "tar.gz" as an artifact type.
+func (d *Deployment) Init(appName, artifactType, baseDir string, uid, gid int) error {
 
 	// Capture the supplied arguments.
 	d.appName = appName
-	d.suffix = suffix
+	d.suffix = artifactType
 	d.uid = uid
 	d.gid = gid
 
@@ -39,34 +41,33 @@ func (d *Deployment) Init(appName, suffix, rootDir string, uid, gid int) error {
 	if appName == "" {
 		return errors.New("Deployment initialization error: appName is mandatory")
 	}
-	switch suffix {
-	case "tgz":
+	switch d.suffix {
 	case "tar.gz":
 		// This is the only filetype currently supported.
 	case "":
-		return errors.New("Deployment initialization error: suffix is mandatory")
+		return errors.New("Deployment initialization error: artifactType is mandatory")
 	default:
-		return errors.New("Deployment initialization error: invalid suffix")
+		return errors.New("Deployment initialization error: invalid artifactType")
 	}
-	if rootDir == "" {
-		return errors.New("Deployment initialization error: rootDir is mandatory")
+	if baseDir == "" {
+		return errors.New("Deployment initialization error: baseDir is mandatory")
 	}
 
 	// The root dir must not be "/".
-	rp := absPath(rootDir)
+	rp := absPath(baseDir)
 	if rp == "/" {
-		return errors.New("Deployment initialization error: \"/\" not permitted as rootDir")
+		return errors.New("Deployment initialization error: \"/\" not permitted as baseDir")
 	}
 
 	// The root dir path must be at least 2 elements ("/foo" has 2: ["", "foo"]).
 	// TODO: put minimum path length into configuration.
 	if dirs := strings.Split(rp, "/"); len(dirs) < 3 {
-		return errors.New("Deployment initialization error: rootDir must be at least 2 levels deep")
+		return errors.New("Deployment initialization error: baseDir must be at least 2 levels deep")
 	}
 
 	// The root dir must exist.
 	if _, err := os.Stat(rp); err != nil {
-		return fmt.Errorf("Deployment initialization error: unable to stat rootDir: %s", err.Error())
+		return fmt.Errorf("Deployment initialization error: unable to stat baseDir: %s", err.Error())
 	}
 
 	// If the base dir doesn't exist, create it.
@@ -96,7 +97,7 @@ func (d *Deployment) Init(appName, suffix, rootDir string, uid, gid int) error {
 	return nil
 }
 
-// Write a file from the repository into the deployment area.
+// Write creates a file in the artifact area from the given stream.
 func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 
 	// Housekeeping: ensure the source is closed when done.
@@ -122,19 +123,20 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	return nil
 }
 
-// Write a GPG signature from the repository into the deployment area.
+// WriteSignature writes a GPG signature into the artifact area.
 func (d *Deployment) WriteSignature(version string, sig []byte) error {
 	// TODO: WriteSignature()
 	return nil
 }
 
-// Validate the integrity of the build artifact.
+// CheckSignature confirms that the artifact has not been corrupted or
+// tampered with by checking its GPG signature.
 func (d *Deployment) CheckSignature(version string) error {
 	// TODO: CheckSignature()
 	return nil
 }
 
-// Extract an artifact into the release directory.
+// Extract transfers an artifact to the version release directory.
 func (d *Deployment) Extract(version string) error {
 
 	// Ensure that the artifact to be extracted exists.
@@ -170,7 +172,7 @@ func (d *Deployment) Extract(version string) error {
 	return nil
 }
 
-// Point symbolic link at named version.
+// Link sets the "current" symlink to point at the indicated version.
 func (d *Deployment) Link(version string) error {
 	versionDir, exists := makeReleasePath(d.releaseDir, version)
 	if !exists {
@@ -181,7 +183,7 @@ func (d *Deployment) Link(version string) error {
 	return os.Symlink(versionDir, symlinkPath)
 }
 
-// Remove everything associated with the given name.
+// Remove deletes everything associated with the given name.
 func (d *Deployment) Remove(version string) error {
 
 	// Removing the currently linked version is not permitted.
@@ -203,7 +205,7 @@ func (d *Deployment) Remove(version string) error {
 	return nil
 }
 
-// Get the currently linked name, if any.
+// GetCurrentLink returns the name of the currently released version.
 func (d *Deployment) GetCurrentLink() string {
 
 	// Read the symlink off disk.
@@ -217,7 +219,7 @@ func (d *Deployment) GetCurrentLink() string {
 	return dirs[len(dirs)-1]
 }
 
-// List all extracted versions available for linking.
+// ListVersions enumerates all the versions currently available for linking.
 func (d *Deployment) ListVersions() []string {
 
 	var versionList []string

@@ -2,7 +2,6 @@ package deployment
 
 import (
 	"fmt"
-	//"io/ioutil"
 	"os"
 	"testing"
 )
