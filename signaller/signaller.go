@@ -2,6 +2,7 @@
 package signaller
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -9,12 +10,6 @@ import (
 
 	config "github.com/mredivo/pulldeploy/configloader"
 )
-
-// RegistryInfo describes the hosts entered into the hosts registry.
-type RegistryInfo struct {
-	Hostname   string // The name of the server running the application
-	AppVersion string // The version of the application this host is serving
-}
 
 // Signaller is used to notify running daemons of deploy and release activity.
 type Signaller struct {
@@ -81,23 +76,6 @@ func (sgnlr *Signaller) Close() {
 	sgnlr.zkConn = nil
 }
 
-// Register enters the name of the local machine into the hosts registry,
-// along with the currently released version (requires Zookeeper).
-func (sgnlr *Signaller) Register(envName, appName, hostName, version string) {
-}
-
-// Unregister removes the name of the local machine from the hosts registry
-// (requires Zookeeper).
-func (sgnlr *Signaller) Unregister(envName, appName, hostName string) {
-}
-
-// GetRegistry retrieves the information in the hosts registry for the given
-// environment and application (requires Zookeeper).
-func (sgnlr *Signaller) GetRegistry(envName, appName string) []RegistryInfo {
-	var ri []RegistryInfo = []RegistryInfo{}
-	return ri
-}
-
 // GetNotificationChannel returns a channel that delivers notifications for the
 // given environment and application.
 func (sgnlr *Signaller) GetNotificationChannel(envName, appName string) <-chan Notification {
@@ -147,4 +125,45 @@ func (sgnlr *Signaller) Notify(envName, appName string) {
 			sgnlr.getZKConnWithLock().Delete(watchPath, -1)
 		}
 	}
+}
+
+// Register enters the name of the local machine into the hosts registry,
+// along with the currently released version (requires Zookeeper).
+func (sgnlr *Signaller) Register(envName, appName, hostName, version string) {
+	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
+		flags := int32(zk.FlagEphemeral)
+		acl := zk.WorldACL(zk.PermAll)
+		registryPath := sgnlr.makeRegistryPath(envName, appName, hostName)
+		sgnlr.makeParentNodes(registryPath)
+		zkConn.Create(registryPath, []byte(version), flags, acl)
+	}
+}
+
+// Unregister removes the name of the local machine from the hosts registry
+// (requires Zookeeper).
+func (sgnlr *Signaller) Unregister(envName, appName, hostName string) {
+	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
+		registryPath := sgnlr.makeRegistryPath(envName, appName, hostName)
+		zkConn.Delete(registryPath, -1)
+	}
+}
+
+// GetRegistry retrieves the information in the hosts registry for the given
+// environment and application (requires Zookeeper).
+func (sgnlr *Signaller) GetRegistry(envName, appName string) []RegistryInfo {
+
+	var ri registryList = make(registryList, 0)
+
+	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
+		registryPath := sgnlr.makeRegistryPath(envName, appName, "")
+		data := make([]byte, 100)
+		hosts, _, _ := zkConn.Children(registryPath)
+		for _, host := range hosts {
+			data, _, _ = zkConn.Get(registryPath + "/" + host)
+			ri = append(ri, RegistryInfo{host, string(data)})
+		}
+	}
+	sort.Sort(ri)
+
+	return ri
 }

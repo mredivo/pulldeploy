@@ -35,6 +35,7 @@ func (sgnlr *Signaller) getZKConnWithLock() *zk.Conn {
 }
 
 // makeAppWatchPath builds the Zookeeper path corresponding to the name env and app.
+//   /<base>/<env>/changed/<app>
 func (sgnlr *Signaller) makeAppWatchPath(envName, appName string) string {
 	return path.Join(sgnlr.cfg.BaseNode, envName, "changed", appName)
 }

@@ -77,6 +77,14 @@ func testSignalling(t *testing.T, sgnlr *Signaller) {
 	// Send a notification.
 	sgnlr.Notify("prod", "myapp")
 
+	// Exercise the registry.
+	sgnlr.Register("prod", "myapp", "myhostname1", "1.1.1")
+	sgnlr.Register("prod", "myapp", "myhostname2", "1.1.1")
+	sgnlr.Register("prod", "myapp", "myhostname3", "1.1.1")
+	fmt.Println(sgnlr.GetRegistry("prod", "myapp"))
+	sgnlr.Unregister("prod", "myapp", "myhostname2")
+	fmt.Println(sgnlr.GetRegistry("prod", "myapp"))
+
 	// Block until all messages arrive, or there's a timeout.
 	unittestWG.Wait()
 
