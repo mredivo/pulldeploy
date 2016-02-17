@@ -75,15 +75,15 @@ func testSignalling(t *testing.T, sgnlr *Signaller) {
 	}()
 
 	// Send a notification.
-	sgnlr.Notify("prod", "myapp")
+	sgnlr.Notify("prod", "myapp", []byte("My, what big teeth you have, granny!"))
 
 	// Exercise the registry.
-	sgnlr.Register("prod", "myapp", "myhostname1", "1.1.1")
-	sgnlr.Register("prod", "myapp", "myhostname2", "1.1.1")
-	sgnlr.Register("prod", "myapp", "myhostname3", "1.1.1")
-	fmt.Println(sgnlr.GetRegistry("prod", "myapp"))
-	sgnlr.Unregister("prod", "myapp", "myhostname2")
-	fmt.Println(sgnlr.GetRegistry("prod", "myapp"))
+	sgnlr.Register("prod", "myapp", "clienthost-1", "1.1.1")
+	sgnlr.Register("prod", "myapp", "clienthost-2", "1.1.1")
+	sgnlr.Register("prod", "myapp", "clienthost-3", "1.1.1")
+	dumpRegistryInfo(sgnlr.GetRegistry("prod", "myapp"))
+	sgnlr.Unregister("prod", "myapp", "clienthost-2")
+	dumpRegistryInfo(sgnlr.GetRegistry("prod", "myapp"))
 
 	// Block until all messages arrive, or there's a timeout.
 	unittestWG.Wait()
@@ -104,4 +104,11 @@ func testSignalling(t *testing.T, sgnlr *Signaller) {
 	}
 
 	unittestMutex.Unlock()
+}
+
+func dumpRegistryInfo(ri []RegistryInfo) {
+	fmt.Printf("Registry contents: %v\n", ri)
+	for _, v := range ri {
+		fmt.Printf("   Host: %s Version: %s\n", v.Hostname, v.AppVersion)
+	}
 }

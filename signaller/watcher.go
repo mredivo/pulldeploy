@@ -116,7 +116,8 @@ func (sgnlr *Signaller) monitorNode(
 			return
 		case e := <-zkEvent:
 			if e.Type == zk.EventNodeCreated {
-				notifChan <- Notification{KNS_ZK, appName, []byte{}}
+				data, _, _ := sgnlr.zkConn.Get(e.Path)
+				notifChan <- Notification{KNS_ZK, appName, data}
 			}
 			_, _, zkEvent, _ = sgnlr.zkConn.ExistsW(watchPath)
 		case <-time.After(numSeconds):

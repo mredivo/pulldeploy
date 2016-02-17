@@ -116,13 +116,13 @@ func (sgnlr *Signaller) GetNotificationChannel(envName, appName string) <-chan N
 }
 
 // Notify sends a notication to all listening daemons in the specified environment.
-func (sgnlr *Signaller) Notify(envName, appName string) {
+func (sgnlr *Signaller) Notify(envName, appName string, data []byte) {
 	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
 		flags := int32(zk.FlagEphemeral)
 		acl := zk.WorldACL(zk.PermAll)
 		watchPath := sgnlr.makeAppWatchPath(envName, appName)
-		if _, err := zkConn.Create(watchPath, []byte("Hello world"), flags, acl); err != nil {
-			sgnlr.getZKConnWithLock().Delete(watchPath, -1)
+		if _, err := zkConn.Create(watchPath, data, flags, acl); err == nil {
+			zkConn.Delete(watchPath, -1)
 		}
 	}
 }
