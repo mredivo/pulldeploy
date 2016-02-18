@@ -2,8 +2,10 @@
 package deployment
 
 import (
+	"crypto/hmac"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,6 +17,7 @@ import (
 const kARTIFACTDIR = ".artifact"
 const kRELEASEDIR = "release"
 const kCURRENTDIR = "current"
+const kHMACSUFFIX = ".hmac"
 
 // Deployment provides methods for manipulating local deployment files.
 type Deployment struct {
@@ -123,16 +126,62 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	return nil
 }
 
-// WriteSignature writes a GPG signature into the artifact area.
-func (d *Deployment) WriteSignature(version string, sig []byte) error {
-	// TODO: WriteSignature()
+// WriteSignature writes an HMAC into the artifact area.
+func (d *Deployment) WriteSignature(version string, hmac []byte) error {
+
+	// Generate the filename, write to file, set ownership.
+	hmacPath, _ := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	hmacPath += kHMACSUFFIX
+	if err := ioutil.WriteFile(hmacPath, hmac, 0664); err != nil {
+		return fmt.Errorf("Error while writing %q: %s", hmacPath, err.Error())
+	}
+	if err := setOwner(hmacPath, d.uid, d.gid); err != nil {
+		return fmt.Errorf("Unable to set owner on %q: %s", hmacPath, err.Error())
+	}
+
 	return nil
 }
 
 // CheckSignature confirms that the artifact has not been corrupted or
-// tampered with by checking its GPG signature.
-func (d *Deployment) CheckSignature(version string) error {
-	// TODO: CheckSignature()
+// tampered with by checking its HMAC.
+func (d *Deployment) CheckSignature(version string, hmacCalculator hash.Hash) error {
+
+	// Build the filenames.
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	if !exists {
+		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
+	}
+	hmacPath := artifactPath + kHMACSUFFIX
+
+	// Read in the HMAC.
+	if expectedMAC, err := ioutil.ReadFile(hmacPath); err == nil {
+
+		// Open the artifact, and calculate its HMAC.
+		if fp, err := os.Open(artifactPath); err == nil {
+			defer fp.Close()
+
+			var buf []byte = make([]byte, 16384)
+			hmacCalculator.Reset()
+			for n, err := fp.Read(buf); n > 0 && err == nil; n, err = fp.Read(buf) {
+				hmacCalculator.Write(buf)
+			}
+
+			messageMAC := hmacCalculator.Sum(nil)
+			if !hmac.Equal(messageMAC, expectedMAC) {
+				return fmt.Errorf(
+					"Artifact is corrupt: Expected HMAC: %q: Calculated HMAC: %q",
+					string(expectedMAC),
+					string(messageMAC),
+				)
+			}
+
+		} else {
+			return fmt.Errorf("Error while reading %q: %s", artifactPath, err.Error())
+		}
+	} else {
+		return fmt.Errorf("Error while reading %q: %s", hmacPath, err.Error())
+	}
+
 	return nil
 }
 
@@ -194,7 +243,7 @@ func (d *Deployment) Remove(version string) error {
 	// Remove the artifact.
 	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix); exists {
 		os.Remove(artifactPath)
-		// TODO: Remove the signature
+		os.Remove(artifactPath + kHMACSUFFIX)
 	}
 
 	// Remove the extracted files.

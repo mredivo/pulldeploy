@@ -1,6 +1,8 @@
 package deployment
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"testing"
@@ -9,6 +11,12 @@ import (
 func TestDeploymentOperations(t *testing.T) {
 
 	const TESTAPP = "stubapp"
+
+	hmacKey := []byte("the quick brown fox jumps over the lazy dog")
+	hmacCalculator := hmac.New(sha256.New, hmacKey)
+
+	badHMAC := []byte("Invalid HMAC value for testing")
+	goodHMAC := []byte("\x13\xb4\x8c\\\x8a\xb9-]\xb5\xdbʱA ̙\x83\xd8.8\x94\x06\"\xb13\xc5\xf3\xf7\xf8\x16\xde\x02")
 
 	os.RemoveAll("../data/client/" + TESTAPP)
 
@@ -64,6 +72,30 @@ func TestDeploymentOperations(t *testing.T) {
 		}
 	} else {
 		t.Errorf("Could not open test data file for reading: %s", err.Error())
+	}
+
+	// Write an invalid HMAC.
+	if err := dep.WriteSignature("1.0.3", badHMAC); err != nil {
+		t.Errorf("WriteSignature failed: %s", err.Error())
+	}
+
+	// Validate the signature.
+	if err := dep.CheckSignature("1.0.3", hmacCalculator); err != nil {
+		fmt.Printf("CheckSignature failed: %s\n", err.Error())
+	} else {
+		t.Errorf("CheckSignature succeeded, but should not have\n")
+	}
+
+	// Write a valid HMAC.
+	if err := dep.WriteSignature("1.0.3", goodHMAC); err != nil {
+		t.Errorf("WriteSignature failed: %s", err.Error())
+	}
+
+	// Validate the signature.
+	if err := dep.CheckSignature("1.0.3", hmacCalculator); err != nil {
+		t.Errorf("CheckSignature failed: %s\n", err.Error())
+	} else {
+		fmt.Printf("CheckSignature succeeded\n")
 	}
 
 	// Extract the artifact into the release directory.
