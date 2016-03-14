@@ -17,7 +17,8 @@ usage: pulldeploy <command> [<args>]
 Commands:
 
     Help:
-        help [<command>]
+        -h, help [<command>]
+        -v, version
 
     Repository management:
         pulldeploy initrepo -app=<app> [-keep=n]
@@ -59,7 +60,7 @@ func main() {
 	// Parse the command line appropriately for the given subcommand.
 	switch os.Args[1] {
 
-	case "help", "-h":
+	case "help", "-h", "-help", "--help":
 		if len(os.Args) == 3 {
 			if isValidCommand := showCommandHelp(os.Args[2]); !isValidCommand {
 				fmt.Println(usageLong)
@@ -67,6 +68,9 @@ func main() {
 		} else {
 			fmt.Println(usageLong)
 		}
+
+	case "version", "-v", "-version", "--version":
+		fmt.Println(versionInfo.OneLine())
 
 	case "initrepo":
 		cmdFlags := flag.NewFlagSet("initrepo", flag.ExitOnError)
