@@ -4,6 +4,11 @@
 *.orig
 *~
 
-# Deployed applications
+# Test and development data
 data/client/*
 data/repository/*
+
+# Generated artifacts
+build/
+version.go
+yaml/pulldeploy.yaml
