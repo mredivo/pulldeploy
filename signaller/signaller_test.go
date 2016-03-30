@@ -18,7 +18,11 @@ func TestSignaller(t *testing.T) {
 func withZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(config.SignallerConfig{[]string{"localhost:2181"}, "/pulldeploy", 1, 5})
+	sgnlr := NewClient(config.SignallerConfig{
+		1,
+		5,
+		config.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
+	})
 	sgnlr.Open()
 	defer sgnlr.Close()
 
@@ -28,7 +32,11 @@ func withZookeeper(t *testing.T) {
 func withoutZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(config.SignallerConfig{[]string{}, "/pulldeploy", 1, 5})
+	sgnlr := NewClient(config.SignallerConfig{
+		1,
+		5,
+		config.ZookeeperConfig{[]string{}, ""},
+	})
 	sgnlr.Open()
 	defer sgnlr.Close()
 

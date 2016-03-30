@@ -20,7 +20,7 @@ func (sgnlr *Signaller) connectWithLock() <-chan zk.Event {
 	}
 
 	var connEvent <-chan zk.Event
-	sgnlr.zkConn, connEvent, _ = zk.Connect(sgnlr.cfg.ZKServers, time.Second)
+	sgnlr.zkConn, connEvent, _ = zk.Connect(sgnlr.cfg.ZK.Servers, time.Second)
 
 	return connEvent
 }
@@ -37,7 +37,7 @@ func (sgnlr *Signaller) getZKConnWithLock() *zk.Conn {
 // makeAppWatchPath builds the Zookeeper path corresponding to the name env and app.
 //   /<base>/<env>/changed/<app>
 func (sgnlr *Signaller) makeAppWatchPath(envName, appName string) string {
-	return path.Join(sgnlr.cfg.BaseNode, envName, "changed", appName)
+	return path.Join(sgnlr.cfg.ZK.BaseNode, envName, "changed", appName)
 }
 
 // makeParentNodes ensures all leading elements of the supplied path are present.

@@ -1,1 +1,19 @@
-# Stub
+# PullDeploy Configuration file
+
+storagemethod: "local"  # One of the KST_* StorageType constants
+
+storage:
+    local:  # KST_LOCAL
+        basedir: "PROJECTDIR/data/repository/"
+    s3:     # KST_S3
+        awsregion: "us-east-1"
+        bucket: "change-pulldeploy-test"
+        prefix: "pulldeploy"
+
+signaller:
+    pollinterval: 60    # Seconds between repository polls when not using Zookeeper
+    pollfallback: 300   # Seconds between repository polls when Zookeeper is available
+    zookeeper:
+        basenode: "/pulldeploy" # The path to the parent of all Zookeeper nodes
+        servers:                # Zookeeper servers: array of host[:port]
+            - "127.0.0.1:2181"

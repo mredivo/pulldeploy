@@ -6,6 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	cfg "github.com/mredivo/pulldeploy/configloader"
 )
 
 const usageShort = `usage: pulldeploy <command> [<args>]
@@ -54,6 +56,14 @@ func main() {
 	// Ensure there are at least two command-line arguments.
 	if len(os.Args) < 2 {
 		fmt.Println(usageShort)
+		return
+	}
+
+	// Load the pulldeploy configuration.
+	if configFile, err := cfg.LoadPulldeployConfig(); err != nil {
+		// TODO: Complain properly.
+		_ = configFile
+		fmt.Println(err.Error())
 		return
 	}
 

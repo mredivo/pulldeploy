@@ -21,5 +21,5 @@ func (rl registryList) Less(i, j int) bool { return rl[i].Hostname < rl[j].Hostn
 // makeRegistryPath builds the Zookeeper path corresponding to the name env and app.
 //   /<base>/<env>/deployments/<app>/registry/<host>
 func (sgnlr *Signaller) makeRegistryPath(envName, appName, hostName string) string {
-	return path.Join(sgnlr.cfg.BaseNode, envName, "deployments", appName, "registry", hostName)
+	return path.Join(sgnlr.cfg.ZK.BaseNode, envName, "deployments", appName, "registry", hostName)
 }

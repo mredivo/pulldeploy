@@ -43,7 +43,7 @@ func (sgnlr *Signaller) Open() {
 	// No locking: handled separately in each called method.
 
 	// If we have a Zookeeper server list, open a connection and monitor it.
-	if len(sgnlr.cfg.ZKServers) > 0 {
+	if len(sgnlr.cfg.ZK.Servers) > 0 {
 
 		// Return immediately if we already have a connection.
 		if sgnlr.getZKConnWithLock() != nil {

@@ -11,4 +11,4 @@ data/repository/*
 # Generated artifacts
 build/
 version.go
-yaml/pulldeploy.yaml
+data/etc/pulldeploy.yaml
