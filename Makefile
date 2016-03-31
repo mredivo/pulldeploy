@@ -4,9 +4,8 @@ TARGET = pulldeploy
 
 BUILDDIR = build
 
-SRCMAIN = cmdinfo.go cmdrepo.go cmdrelease.go
 SRCLIBS = ./configloader/*go ./deployment/*go ./repostorage/*go ./signaller/*go
-SOURCES = $(TARGET).go $(SRCMAIN) $(SRCLIBS)
+SOURCES = $(TARGET).go $(SRCLIBS)
 TESTS = ./configloader ./deployment ./repostorage ./signaller
 PWD = $(shell pwd)
 
@@ -52,4 +51,4 @@ endif
 build: $(BUILDDIR)/$(TARGET)
 
 $(BUILDDIR)/$(TARGET): $(SOURCES)
-	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go $(SRCMAIN) version.go
+	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go version.go
