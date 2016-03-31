@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	cmd "github.com/mredivo/pulldeploy/command"
 	cfg "github.com/mredivo/pulldeploy/configloader"
 )
 
@@ -87,9 +88,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application to create in the repository")
 		cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdInitrepo{}
-		if isValid := cmd.checkArgs(appName, keep); isValid {
-			cmd.exec()
+		cmd := cmd.Initrepo{}
+		if isValid := cmd.CheckArgs(appName, keep); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -99,9 +100,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application whose repository to update")
 		cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdSet{}
-		if isValid := cmd.checkArgs(appName, keep); isValid {
-			cmd.exec()
+		cmd := cmd.Set{}
+		if isValid := cmd.CheckArgs(appName, keep); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -110,9 +111,9 @@ func main() {
 		cmdFlags := flag.NewFlagSet("addenv", flag.ExitOnError)
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdAddenv{}
-		if isValid := cmd.checkArgs(appName, cmdFlags.Args()); isValid {
-			cmd.exec()
+		cmd := cmd.Addenv{}
+		if isValid := cmd.CheckArgs(appName, cmdFlags.Args()); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -121,9 +122,9 @@ func main() {
 		cmdFlags := flag.NewFlagSet("rmenv", flag.ExitOnError)
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdRmenv{}
-		if isValid := cmd.checkArgs(appName, cmdFlags.Args()); isValid {
-			cmd.exec()
+		cmd := cmd.Rmenv{}
+		if isValid := cmd.CheckArgs(appName, cmdFlags.Args()); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -135,9 +136,9 @@ func main() {
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being uploaded")
 		cmdFlags.BoolVar(&disabled, "disabled", false, "upload in disabled state")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdUpload{}
-		if isValid := cmd.checkArgs(appName, appVersion, disabled, cmdFlags.Args()); isValid {
-			cmd.exec()
+		cmd := cmd.Upload{}
+		if isValid := cmd.CheckArgs(appName, appVersion, disabled, cmdFlags.Args()); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -147,9 +148,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being enabled")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdEnable{}
-		if isValid := cmd.checkArgs(appName, appVersion); isValid {
-			cmd.exec()
+		cmd := cmd.Enable{}
+		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -159,9 +160,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being disabled")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdDisable{}
-		if isValid := cmd.checkArgs(appName, appVersion); isValid {
-			cmd.exec()
+		cmd := cmd.Disable{}
+		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -171,9 +172,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being purged")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdPurge{}
-		if isValid := cmd.checkArgs(appName, appVersion); isValid {
-			cmd.exec()
+		cmd := cmd.Purge{}
+		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -184,9 +185,9 @@ func main() {
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be deployed")
 		cmdFlags.StringVar(&envName, "env", "", "environment to which to deploy")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdDeploy{}
-		if isValid := cmd.checkArgs(appName, appVersion, envName); isValid {
-			cmd.exec()
+		cmd := cmd.Deploy{}
+		if isValid := cmd.CheckArgs(appName, appVersion, envName); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -197,9 +198,9 @@ func main() {
 		cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be released")
 		cmdFlags.StringVar(&envName, "env", "", "environment in which to release")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdRelease{}
-		if isValid := cmd.checkArgs(appName, appVersion, envName, cmdFlags.Args()); isValid {
-			cmd.exec()
+		cmd := cmd.Release{}
+		if isValid := cmd.CheckArgs(appName, appVersion, envName, cmdFlags.Args()); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -207,9 +208,9 @@ func main() {
 	case "list":
 		cmdFlags := flag.NewFlagSet("list", flag.ExitOnError)
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdList{}
-		if isValid := cmd.checkArgs(); isValid {
-			cmd.exec()
+		cmd := cmd.List{}
+		if isValid := cmd.CheckArgs(); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -218,9 +219,9 @@ func main() {
 		cmdFlags := flag.NewFlagSet("status", flag.ExitOnError)
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdStatus{}
-		if isValid := cmd.checkArgs(appName); isValid {
-			cmd.exec()
+		cmd := cmd.Status{}
+		if isValid := cmd.CheckArgs(appName); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
@@ -230,9 +231,9 @@ func main() {
 		cmdFlags.StringVar(&appName, "app", "", "name of the application")
 		cmdFlags.StringVar(&envName, "env", "", "environment in which to release")
 		cmdFlags.Parse(os.Args[2:])
-		cmd := cmdListhosts{}
-		if isValid := cmd.checkArgs(appName, envName); isValid {
-			cmd.exec()
+		cmd := cmd.Listhosts{}
+		if isValid := cmd.CheckArgs(appName, envName); isValid {
+			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])
 		}
