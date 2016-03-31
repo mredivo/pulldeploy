@@ -4,9 +4,9 @@ TARGET = pulldeploy
 
 BUILDDIR = build
 
-SRCLIBS = ./configloader/*go ./deployment/*go ./repostorage/*go ./signaller/*go
+SRCLIBS = ./configloader/*go ./deployment/*go ./storage/*go ./signaller/*go
 SOURCES = $(TARGET).go $(SRCLIBS)
-TESTS = ./configloader ./deployment ./repostorage ./signaller
+TESTS = ./configloader ./deployment ./storage ./signaller
 PWD = $(shell pwd)
 
 ifdef CIRCLECI

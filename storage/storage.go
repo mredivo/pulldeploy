@@ -1,5 +1,5 @@
-// Package repostorage provides access to repository storage.
-package repostorage
+// Package storage provides access to repository storage.
+package storage
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 // Params is our way of making Init() polymorphic.
 type Params map[string]string
 
-// RepoStorage provides methods to set and get repository data.
-type RepoStorage interface {
+// Storage provides methods to set and get repository data.
+type Storage interface {
 	Init(params Params) error                                        // Set up access parameters
 	Get(repoPath string) ([]byte, error)                             // Retrieve data from a repository file
 	Put(repoPath string, data []byte) error                          // Write data to a repository file
@@ -26,8 +26,8 @@ func (st StorageType) String() string {
 	return string(st)
 }
 
-// NewRepoStorage returns an instance of RepoStorage of the requested type.
-func NewRepoStorage(st StorageType) (RepoStorage, error) {
+// NewStorage returns an instance of Storage of the requested type.
+func NewStorage(st StorageType) (Storage, error) {
 	switch st {
 	case KST_LOCAL:
 		return &stLocal{}, nil

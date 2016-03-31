@@ -1,4 +1,4 @@
-package repostorage
+package storage
 
 import (
 	"bytes"
@@ -13,17 +13,17 @@ var doS3Tests bool = true
 
 const TESTAPP = "stubapp"
 
-func TestRepoStorage(t *testing.T) {
+func TestStorage(t *testing.T) {
 
 	// An invalid StorageType should fail.
-	if _, err := NewRepoStorage("nosuchstoragetype"); err == nil {
+	if _, err := NewStorage("nosuchstoragetype"); err == nil {
 		t.Errorf("Storage creation succeeded with invalid storage type")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Exercise the Local storage type.
-	if rs, err := NewRepoStorage(KST_LOCAL); err == nil {
+	if rs, err := NewStorage(KST_LOCAL); err == nil {
 
 		// Test handling of initialization.
 		params := make(map[string]string)
@@ -44,14 +44,14 @@ func TestRepoStorage(t *testing.T) {
 		if err := rs.Init(params); err != nil {
 			t.Errorf("%s storage initialization failed: %s", KST_LOCAL, err.Error())
 		}
-		testRepoStorage(t, KST_LOCAL, rs)
+		testStorage(t, KST_LOCAL, rs)
 
 	} else {
 		t.Errorf("%s storage creation failed: %s", KST_LOCAL, err.Error())
 	}
 
 	// Exercise the S3 storage type.
-	if rs, err := NewRepoStorage(KST_S3); err == nil {
+	if rs, err := NewStorage(KST_S3); err == nil {
 
 		// Test handling of initialization.
 		params := make(map[string]string)
@@ -75,7 +75,7 @@ func TestRepoStorage(t *testing.T) {
 			t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
 		}
 		if doS3Tests {
-			testRepoStorage(t, KST_S3, rs)
+			testStorage(t, KST_S3, rs)
 		}
 
 	} else {
@@ -83,7 +83,7 @@ func TestRepoStorage(t *testing.T) {
 	}
 }
 
-func testRepoStorage(t *testing.T, st StorageType, rs RepoStorage) {
+func testStorage(t *testing.T, st StorageType, rs Storage) {
 
 	sampleBytes := []byte("This is sample repository data.\n")
 	sampleFilename1 := "/" + TESTAPP + "/method_a/sampledata.txt"
