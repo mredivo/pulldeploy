@@ -33,10 +33,15 @@ type SignallerConfig struct {
 }
 
 type sourceConfig struct {
-	configDir     string // Invisible to YAML decoder, determined at runtime
-	StorageMethod string // One of the KST_* StorageType constants
-	Storage       map[string]map[string]string
-	Signaller     SignallerConfig
+	configDir   string // Invisible to YAML decoder, determined at runtime
+	StorageType string // One of the KST_* StorageType constants
+	Storage     map[string]map[string]string
+	Signaller   SignallerConfig
+}
+
+type StorageConfig struct {
+	Type   string            // One of the KST_* StorageType constants
+	Params map[string]string // Type-specific parameters
 }
 
 type AppConfig struct {
@@ -102,6 +107,18 @@ func LoadPulldeployConfig() (string, error) {
 	}
 
 	return configFile, err
+}
+
+// GetStorageConfig returns the type and params for the configured storage.
+func GetStorageConfig() *StorageConfig {
+	sc := new(StorageConfig)
+	sc.Type = sourceValues.StorageType
+	if params, found := sourceValues.Storage[sourceValues.StorageType]; found {
+		sc.Params = params
+	} else {
+		sc.Params = make(map[string]string)
+	}
+	return sc
 }
 
 // GetAppList returns a list of the client applications.
