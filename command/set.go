@@ -3,15 +3,20 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy set -app=<app> [-keep=n]
 type Set struct {
+	pdcfg   pdconfig.PDConfig
 	appName string
 	keep    int
 }
 
-func (cmd *Set) CheckArgs(osArgs []string) bool {
+func (cmd *Set) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName string
 	var keep int

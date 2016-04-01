@@ -3,14 +3,19 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy status -app=<app>
 type Status struct {
+	pdcfg   pdconfig.PDConfig
 	appName string
 }
 
-func (cmd *Status) CheckArgs(osArgs []string) bool {
+func (cmd *Status) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName string
 

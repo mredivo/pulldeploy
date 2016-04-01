@@ -4,9 +4,9 @@ TARGET = pulldeploy
 
 BUILDDIR = build
 
-SRCLIBS = ./configloader/*go ./deployment/*go ./storage/*go ./signaller/*go ./command/*go
+SRCLIBS = ./pdconfig/*go ./deployment/*go ./storage/*go ./signaller/*go ./command/*go
 SOURCES = $(TARGET).go $(SRCLIBS)
-TESTS = ./configloader ./deployment ./storage ./signaller
+TESTS = ./pdconfig ./deployment ./storage ./signaller
 PWD = $(shell pwd)
 
 ifdef CIRCLECI
@@ -50,5 +50,5 @@ endif
 
 build: $(BUILDDIR)/$(TARGET)
 
-$(BUILDDIR)/$(TARGET): $(SOURCES)
+$(BUILDDIR)/$(TARGET): $(SOURCES) version.go
 	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go version.go

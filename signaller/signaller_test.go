@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	config "github.com/mredivo/pulldeploy/configloader"
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // TestSignaller performs the tests twice, with and without Zookeeper.
@@ -18,10 +18,10 @@ func TestSignaller(t *testing.T) {
 func withZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(config.SignallerConfig{
+	sgnlr := NewClient(pdconfig.SignallerConfig{
 		1,
 		5,
-		config.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
+		pdconfig.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
 	})
 	sgnlr.Open()
 	defer sgnlr.Close()
@@ -32,10 +32,10 @@ func withZookeeper(t *testing.T) {
 func withoutZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(config.SignallerConfig{
+	sgnlr := NewClient(pdconfig.SignallerConfig{
 		1,
 		5,
-		config.ZookeeperConfig{[]string{}, ""},
+		pdconfig.ZookeeperConfig{[]string{}, ""},
 	})
 	sgnlr.Open()
 	defer sgnlr.Close()

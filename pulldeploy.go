@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/mredivo/pulldeploy/command"
-	cfg "github.com/mredivo/pulldeploy/configloader"
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 const usageShort = `usage: pulldeploy <command> [<args>]
@@ -91,12 +91,18 @@ func main() {
 		return
 	}
 
-	// Load the pulldeploy configuration.
-	if configFile, err := cfg.LoadPulldeployConfig(); err != nil {
-		// TODO: Complain properly.
-		_ = configFile
-		fmt.Println(err.Error())
+	// Load the configuration.
+	var pdcfg pdconfig.PDConfig
+	var errs []error
+	if pdcfg, errs = pdconfig.LoadPulldeployConfig(); pdcfg == nil {
+		for _, err := range errs {
+			fmt.Println(err.Error())
+		}
 		return
+	}
+	// Print any warnings, but continue.
+	for _, err := range errs {
+		fmt.Println(err.Error())
 	}
 
 	// Parse the command line appropriately for the given subcommand.
@@ -147,7 +153,7 @@ func main() {
 
 	// If a command was recognized, validate and execute it.
 	if cmd != nil {
-		if isValid := cmd.CheckArgs(os.Args[2:]); isValid {
+		if isValid := cmd.CheckArgs(pdcfg, os.Args[2:]); isValid {
 			cmd.Exec()
 		} else {
 			showCommandHelp(os.Args[1])

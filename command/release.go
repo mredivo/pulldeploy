@@ -3,17 +3,22 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy release -app=<app> -version=<version> -env=<env> [host1, host2, ...]
 type Release struct {
+	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 	envName    string
 	hosts      []string
 }
 
-func (cmd *Release) CheckArgs(osArgs []string) bool {
+func (cmd *Release) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName, appVersion, envName string
 

@@ -3,15 +3,20 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy rmenv -app=<app> envname [envname envname ...]
 type Rmenv struct {
+	pdcfg    pdconfig.PDConfig
 	appName  string
 	envNames []string
 }
 
-func (cmd *Rmenv) CheckArgs(osArgs []string) bool {
+func (cmd *Rmenv) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName string
 

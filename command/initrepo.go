@@ -4,18 +4,21 @@ import (
 	"flag"
 	"fmt"
 
-	cfg "github.com/mredivo/pulldeploy/configloader"
+	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/repo"
 	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy initrepo -app=<app> [-keep=n]
 type Initrepo struct {
+	pdcfg   pdconfig.PDConfig
 	appName string
 	keep    int
 }
 
-func (cmd *Initrepo) CheckArgs(osArgs []string) bool {
+func (cmd *Initrepo) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName string
 	var keep int
@@ -47,13 +50,21 @@ func (cmd *Initrepo) CheckArgs(osArgs []string) bool {
 func (cmd *Initrepo) Exec() {
 	fmt.Printf("initrepo(%s, %d)\n", cmd.appName, cmd.keep)
 
-	stgcfg := cfg.GetStorageConfig()
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		fmt.Printf("Repository initialization error: %s\n", err.Error())
+		return
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
 	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
 	if err != nil {
 		fmt.Printf("Repository initialization error: %s\n", err.Error())
 		return
 	}
 
+	// Initialize the index and store it.
 	ri := repo.NewRepoIndex(cmd.appName, cmd.keep)
 	if text, err := ri.ToJSON(); err == nil {
 		fmt.Println(string(text))

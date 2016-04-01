@@ -3,15 +3,20 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy purge -app=<app> -version=<version>
 type Purge struct {
+	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 }
 
-func (cmd *Purge) CheckArgs(osArgs []string) bool {
+func (cmd *Purge) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName, appVersion string
 

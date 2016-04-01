@@ -3,15 +3,20 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy disable -app=<app> -version=<version>
 type Disable struct {
+	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 }
 
-func (cmd *Disable) CheckArgs(osArgs []string) bool {
+func (cmd *Disable) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName, appVersion string
 

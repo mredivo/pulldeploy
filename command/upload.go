@@ -3,17 +3,22 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy upload -app=<app> -version=<version> [-disabled] <file>
 type Upload struct {
+	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 	disabled   bool
 	filename   string
 }
 
-func (cmd *Upload) CheckArgs(osArgs []string) bool {
+func (cmd *Upload) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var appName, appVersion string
 	var disabled bool

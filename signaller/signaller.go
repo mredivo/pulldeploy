@@ -8,13 +8,13 @@ import (
 
 	"github.com/samuel/go-zookeeper/zk"
 
-	config "github.com/mredivo/pulldeploy/configloader"
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // Signaller is used to notify running daemons of deploy and release activity.
 type Signaller struct {
 	self      sync.RWMutex                  // Mutex to control access to this struct
-	cfg       config.SignallerConfig        // The signaller configuration
+	cfg       pdconfig.SignallerConfig      // The signaller configuration
 	wg        sync.WaitGroup                // A waitgroup to monitor lifetime of all goroutines
 	quit      chan struct{}                 // Closing this channel causes all goroutines to exit
 	zkConn    *zk.Conn                      // The connection to Zookeeper, if used, else nil
@@ -23,7 +23,7 @@ type Signaller struct {
 }
 
 // NewCient returns a new Signaller.
-func NewClient(cfg config.SignallerConfig) *Signaller {
+func NewClient(cfg pdconfig.SignallerConfig) *Signaller {
 
 	// Create object, apply arguments.
 	sgnlr := &Signaller{}

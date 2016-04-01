@@ -3,14 +3,19 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy daemon ...
 type Daemon struct {
+	pdcfg   pdconfig.PDConfig
 	envName string
 }
 
-func (cmd *Daemon) CheckArgs(osArgs []string) bool {
+func (cmd *Daemon) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+
+	cmd.pdcfg = pdcfg
 
 	var envName string
 
