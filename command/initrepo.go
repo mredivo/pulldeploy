@@ -3,6 +3,10 @@ package command
 import (
 	"flag"
 	"fmt"
+
+	cfg "github.com/mredivo/pulldeploy/configloader"
+	"github.com/mredivo/pulldeploy/repo"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy initrepo -app=<app> [-keep=n]
@@ -42,4 +46,19 @@ func (cmd *Initrepo) CheckArgs(osArgs []string) bool {
 
 func (cmd *Initrepo) Exec() {
 	fmt.Printf("initrepo(%s, %d)\n", cmd.appName, cmd.keep)
+
+	stgcfg := cfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		fmt.Printf("Repository initialization error: %s\n", err.Error())
+		return
+	}
+
+	ri := repo.NewRepoIndex(cmd.appName, cmd.keep)
+	if text, err := ri.ToJSON(); err == nil {
+		fmt.Println(string(text))
+		if err := stg.Put(ri.RepoIndexPath(), text); err != nil {
+			fmt.Printf("Repository initialization error: %s\n", err.Error())
+		}
+	}
 }
