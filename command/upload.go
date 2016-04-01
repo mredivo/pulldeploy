@@ -54,6 +54,7 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Upload) Exec() {
+func (cmd *Upload) Exec() *ErrorList {
 	placeHolder("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
+	return cmd.el
 }

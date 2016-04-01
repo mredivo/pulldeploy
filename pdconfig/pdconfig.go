@@ -70,7 +70,7 @@ func (pdcfg *pdConfig) GetAppConfig(appName string) (*AppConfig, error) {
 		appConfig = *ac
 		return &appConfig, nil
 	} else {
-		return nil, fmt.Errorf("No configuration available for application %q", appName)
+		return nil, fmt.Errorf("No configuration for application %q", appName)
 	}
 }
 

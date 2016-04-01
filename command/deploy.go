@@ -48,6 +48,7 @@ func (cmd *Deploy) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Deploy) Exec() {
+func (cmd *Deploy) Exec() *ErrorList {
 	placeHolder("deploy(%s, %s, %s)\n", cmd.appName, cmd.appVersion, cmd.envName)
+	return cmd.el
 }

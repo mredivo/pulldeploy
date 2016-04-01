@@ -26,7 +26,7 @@ func (cmd *List) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []str
 	return cmd.el
 }
 
-func (cmd *List) Exec() {
+func (cmd *List) Exec() *ErrorList {
 
 	// Fetch the list of applications.
 	appList := cmd.pdcfg.GetAppList()
@@ -50,4 +50,6 @@ func (cmd *List) Exec() {
 		fmt.Printf("    User        : %s\n", appConfig.User)
 		fmt.Printf("    Group       : %s\n", appConfig.Group)
 	}
+
+	return cmd.el
 }

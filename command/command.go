@@ -9,7 +9,7 @@ import (
 // Handler is the interface to which every command handler must conform.
 type Handler interface {
 	CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList
-	Exec()
+	Exec() *ErrorList
 }
 
 func NewErrorList(cmdName string) *ErrorList {

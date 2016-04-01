@@ -32,6 +32,7 @@ func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Daemon) Exec() {
+func (cmd *Daemon) Exec() *ErrorList {
 	placeHolder("daemon(%s)\n", cmd.envName)
+	return cmd.el
 }

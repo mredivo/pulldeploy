@@ -32,6 +32,7 @@ func (cmd *Status) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Status) Exec() {
+func (cmd *Status) Exec() *ErrorList {
 	placeHolder("status(%s)\n", cmd.appName)
+	return cmd.el
 }

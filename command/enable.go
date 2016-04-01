@@ -40,6 +40,7 @@ func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Enable) Exec() {
+func (cmd *Enable) Exec() *ErrorList {
 	placeHolder("enable(%s, %s)\n", cmd.appName, cmd.appVersion)
+	return cmd.el
 }

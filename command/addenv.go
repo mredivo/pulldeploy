@@ -39,6 +39,7 @@ func (cmd *Addenv) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	return cmd.el
 }
 
-func (cmd *Addenv) Exec() {
+func (cmd *Addenv) Exec() *ErrorList {
 	placeHolder("addenv(%s, %v)\n", cmd.appName, cmd.envNames)
+	return cmd.el
 }

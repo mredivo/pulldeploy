@@ -44,21 +44,20 @@ func (cmd *Initrepo) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs [
 	return cmd.el
 }
 
-func (cmd *Initrepo) Exec() {
-	placeHolder("initrepo(%s, %d)\n", cmd.appName, cmd.keep)
+func (cmd *Initrepo) Exec() *ErrorList {
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
-		fmt.Printf("Repository initialization error: %s\n", err.Error())
-		return
+		cmd.el.Append(err)
+		return cmd.el
 	}
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
 	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
 	if err != nil {
-		fmt.Printf("Repository initialization error: %s\n", err.Error())
-		return
+		cmd.el.Append(err)
+		return cmd.el
 	}
 
 	// Initialize the index and store it.
@@ -66,7 +65,11 @@ func (cmd *Initrepo) Exec() {
 	if text, err := ri.ToJSON(); err == nil {
 		fmt.Println(string(text))
 		if err := stg.Put(ri.RepoIndexPath(), text); err != nil {
-			fmt.Printf("Repository initialization error: %s\n", err.Error())
+			cmd.el.Append(err)
 		}
+	} else {
+		cmd.el.Append(err)
 	}
+
+	return cmd.el
 }

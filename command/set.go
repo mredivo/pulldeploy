@@ -41,6 +41,7 @@ func (cmd *Set) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []stri
 	return cmd.el
 }
 
-func (cmd *Set) Exec() {
+func (cmd *Set) Exec() *ErrorList {
 	placeHolder("set(%s, %d)\n", cmd.appName, cmd.keep)
+	return cmd.el
 }

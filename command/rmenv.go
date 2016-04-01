@@ -39,6 +39,7 @@ func (cmd *Rmenv) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []st
 	return cmd.el
 }
 
-func (cmd *Rmenv) Exec() {
+func (cmd *Rmenv) Exec() *ErrorList {
 	placeHolder("rmenv(%s, %v)\n", cmd.appName, cmd.envNames)
+	return cmd.el
 }

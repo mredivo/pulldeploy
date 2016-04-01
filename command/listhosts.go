@@ -40,6 +40,7 @@ func (cmd *Listhosts) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs 
 	return cmd.el
 }
 
-func (cmd *Listhosts) Exec() {
+func (cmd *Listhosts) Exec() *ErrorList {
 	placeHolder("listhosts(%s, %s)\n", cmd.appName, cmd.envName)
+	return cmd.el
 }

@@ -88,19 +88,20 @@ func main() {
 	// Ensure there are at least two command-line arguments.
 	if len(os.Args) < 2 {
 		fmt.Println(usageShort)
-		return
+		os.Exit(1)
 	}
 
 	// Load the configuration.
 	var pdcfg pdconfig.PDConfig
 	var errs []error
 	if pdcfg, errs = pdconfig.LoadPulldeployConfig(); pdcfg == nil {
+		// Not loading a configuration in pdcfg is fatal.
 		for _, err := range errs {
 			fmt.Println(err.Error())
 		}
-		return
+		os.Exit(3)
 	}
-	// Print any warnings, but continue.
+	// If we got a configuration, remaining errors are warnings.
 	for _, err := range errs {
 		fmt.Println(err.Error())
 	}
@@ -152,14 +153,24 @@ func main() {
 	}
 
 	// If a command was recognized, validate and execute it.
+	var exitCode int
 	if cmd != nil {
 		if el := cmd.CheckArgs(os.Args[1], pdcfg, os.Args[2:]); el.Len() == 0 {
-			cmd.Exec()
+			el = cmd.Exec()
+			for _, s := range el.Errors() {
+				fmt.Println(s)
+				exitCode = 4
+			}
 		} else {
+			exitCode = 2
 			for _, s := range el.Errors() {
 				fmt.Println(s)
 			}
 			showCommandHelp(os.Args[1])
 		}
+	}
+
+	if exitCode > 0 {
+		os.Exit(exitCode)
 	}
 }

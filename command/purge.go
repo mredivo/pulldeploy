@@ -40,6 +40,7 @@ func (cmd *Purge) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []st
 	return cmd.el
 }
 
-func (cmd *Purge) Exec() {
+func (cmd *Purge) Exec() *ErrorList {
 	placeHolder("purge(%s, %s)\n", cmd.appName, cmd.appVersion)
+	return cmd.el
 }

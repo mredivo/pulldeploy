@@ -40,6 +40,7 @@ func (cmd *Disable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []
 	return cmd.el
 }
 
-func (cmd *Disable) Exec() {
+func (cmd *Disable) Exec() *ErrorList {
 	placeHolder("disable(%s, %s)\n", cmd.appName, cmd.appVersion)
+	return cmd.el
 }
