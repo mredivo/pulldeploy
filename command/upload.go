@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 )
 
@@ -12,30 +13,45 @@ type Upload struct {
 	filename   string
 }
 
-func (cmd *Upload) CheckArgs(appName, appVersion string, disabled bool, args []string) bool {
+func (cmd *Upload) CheckArgs(osArgs []string) bool {
+
+	var appName, appVersion string
+	var disabled bool
+
+	cmdFlags := flag.NewFlagSet("upload", flag.ExitOnError)
+	cmdFlags.StringVar(&appName, "app", "", "name of the application")
+	cmdFlags.StringVar(&appVersion, "version", "", "version of the application being uploaded")
+	cmdFlags.BoolVar(&disabled, "disabled", false, "upload in disabled state")
+	cmdFlags.Parse(osArgs)
+
 	isValid := true
+
 	if appName == "" {
 		fmt.Println("app is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appName = appName
 	}
+
 	if appVersion == "" {
 		fmt.Println("version is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appVersion = appVersion
 	}
+
 	cmd.disabled = disabled
-	if len(args) < 1 {
+
+	if len(cmdFlags.Args()) < 1 {
 		fmt.Println("filename is a mandatory argument")
 		isValid = false
-	} else if len(args) > 1 {
+	} else if len(cmdFlags.Args()) > 1 {
 		fmt.Println("only one filename may be specified")
 		isValid = false
 	} else {
-		cmd.filename = args[0]
+		cmd.filename = cmdFlags.Args()[0]
 	}
+
 	return isValid
 }
 

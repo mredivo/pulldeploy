@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 	"sort"
 
@@ -11,7 +12,12 @@ import (
 type List struct {
 }
 
-func (cmd *List) CheckArgs() bool {
+func (cmd *List) CheckArgs(osArgs []string) bool {
+
+	// Define a null set, so we can complain about extraneous args.
+	cmdFlags := flag.NewFlagSet("list", flag.ExitOnError)
+	cmdFlags.Parse(osArgs)
+
 	return true
 }
 

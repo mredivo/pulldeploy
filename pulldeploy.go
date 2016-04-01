@@ -3,11 +3,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
-	cmd "github.com/mredivo/pulldeploy/command"
+	"github.com/mredivo/pulldeploy/command"
 	cfg "github.com/mredivo/pulldeploy/configloader"
 )
 
@@ -46,211 +45,6 @@ Commands:
         pulldeploy daemon -env=<env> <daemon args>...
 `
 
-func main() {
-
-	// Variables sourced from the command line.
-	var appName string    // The name of the application on which to act
-	var appVersion string // The application version
-	var envName string    // The name of the environment in which to act
-	var keep int          // The number of versions of an app to keep in the repo
-
-	// Ensure there are at least two command-line arguments.
-	if len(os.Args) < 2 {
-		fmt.Println(usageShort)
-		return
-	}
-
-	// Load the pulldeploy configuration.
-	if configFile, err := cfg.LoadPulldeployConfig(); err != nil {
-		// TODO: Complain properly.
-		_ = configFile
-		fmt.Println(err.Error())
-		return
-	}
-
-	// Parse the command line appropriately for the given subcommand.
-	switch os.Args[1] {
-
-	case "help", "-h", "-help", "--help":
-		if len(os.Args) == 3 {
-			if isValidCommand := showCommandHelp(os.Args[2]); !isValidCommand {
-				fmt.Println(usageLong)
-			}
-		} else {
-			fmt.Println(usageLong)
-		}
-
-	case "version", "-v", "-version", "--version":
-		fmt.Println(versionInfo.OneLine())
-
-	case "initrepo":
-		cmdFlags := flag.NewFlagSet("initrepo", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application to create in the repository")
-		cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Initrepo{}
-		if isValid := cmd.CheckArgs(appName, keep); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "set":
-		cmdFlags := flag.NewFlagSet("set", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application whose repository to update")
-		cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Set{}
-		if isValid := cmd.CheckArgs(appName, keep); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "addenv":
-		cmdFlags := flag.NewFlagSet("addenv", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Addenv{}
-		if isValid := cmd.CheckArgs(appName, cmdFlags.Args()); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "rmenv":
-		cmdFlags := flag.NewFlagSet("rmenv", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Rmenv{}
-		if isValid := cmd.CheckArgs(appName, cmdFlags.Args()); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "upload":
-		var disabled bool
-		cmdFlags := flag.NewFlagSet("upload", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being uploaded")
-		cmdFlags.BoolVar(&disabled, "disabled", false, "upload in disabled state")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Upload{}
-		if isValid := cmd.CheckArgs(appName, appVersion, disabled, cmdFlags.Args()); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "enable":
-		cmdFlags := flag.NewFlagSet("enable", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being enabled")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Enable{}
-		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "disable":
-		cmdFlags := flag.NewFlagSet("disable", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being disabled")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Disable{}
-		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "purge":
-		cmdFlags := flag.NewFlagSet("purge", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application being purged")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Purge{}
-		if isValid := cmd.CheckArgs(appName, appVersion); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "deploy":
-		cmdFlags := flag.NewFlagSet("deploy", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be deployed")
-		cmdFlags.StringVar(&envName, "env", "", "environment to which to deploy")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Deploy{}
-		if isValid := cmd.CheckArgs(appName, appVersion, envName); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "release":
-		cmdFlags := flag.NewFlagSet("release", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be released")
-		cmdFlags.StringVar(&envName, "env", "", "environment in which to release")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Release{}
-		if isValid := cmd.CheckArgs(appName, appVersion, envName, cmdFlags.Args()); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "list":
-		cmdFlags := flag.NewFlagSet("list", flag.ExitOnError)
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.List{}
-		if isValid := cmd.CheckArgs(); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "status":
-		cmdFlags := flag.NewFlagSet("status", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Status{}
-		if isValid := cmd.CheckArgs(appName); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "listhosts":
-		cmdFlags := flag.NewFlagSet("listhosts", flag.ExitOnError)
-		cmdFlags.StringVar(&appName, "app", "", "name of the application")
-		cmdFlags.StringVar(&envName, "env", "", "environment in which to release")
-		cmdFlags.Parse(os.Args[2:])
-		cmd := cmd.Listhosts{}
-		if isValid := cmd.CheckArgs(appName, envName); isValid {
-			cmd.Exec()
-		} else {
-			showCommandHelp(os.Args[1])
-		}
-
-	case "daemon":
-		// Enter the monitoring loop and put changes into effect locally.
-		cmdFlags := flag.NewFlagSet("daemon", flag.ExitOnError)
-		cmdFlags.StringVar(&envName, "env", "", "environment to be monitored")
-		cmdFlags.Parse(os.Args[2:])
-
-	default:
-		fmt.Printf("%q is not a valid command\n", os.Args[1])
-		os.Exit(2)
-	}
-
-}
-
 func showCommandHelp(command string) bool {
 	isValid := true
 	switch command {
@@ -287,4 +81,76 @@ func showCommandHelp(command string) bool {
 		isValid = false
 	}
 	return isValid
+}
+
+func main() {
+
+	// Ensure there are at least two command-line arguments.
+	if len(os.Args) < 2 {
+		fmt.Println(usageShort)
+		return
+	}
+
+	// Load the pulldeploy configuration.
+	if configFile, err := cfg.LoadPulldeployConfig(); err != nil {
+		// TODO: Complain properly.
+		_ = configFile
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Parse the command line appropriately for the given subcommand.
+	var cmd command.Handler
+	switch os.Args[1] {
+	case "help", "-h", "-help", "--help":
+		if len(os.Args) > 2 {
+			if isValidCommand := showCommandHelp(os.Args[2]); !isValidCommand {
+				fmt.Println(usageLong)
+			}
+		} else {
+			fmt.Println(usageLong)
+		}
+	case "version", "-v", "-version", "--version":
+		fmt.Println(versionInfo.OneLine())
+	case "initrepo":
+		cmd = new(command.Initrepo)
+	case "set":
+		cmd = new(command.Set)
+	case "addenv":
+		cmd = new(command.Addenv)
+	case "rmenv":
+		cmd = new(command.Rmenv)
+	case "upload":
+		cmd = new(command.Upload)
+	case "enable":
+		cmd = new(command.Enable)
+	case "disable":
+		cmd = new(command.Disable)
+	case "purge":
+		cmd = new(command.Purge)
+	case "deploy":
+		cmd = new(command.Deploy)
+	case "release":
+		cmd = new(command.Release)
+	case "list":
+		cmd = new(command.List)
+	case "status":
+		cmd = new(command.Status)
+	case "listhosts":
+		cmd = new(command.Listhosts)
+	case "daemon":
+		cmd = new(command.Daemon)
+	default:
+		fmt.Printf("%q is not a valid command\n", os.Args[1])
+		os.Exit(2)
+	}
+
+	// If a command was recognized, validate and execute it.
+	if cmd != nil {
+		if isValid := cmd.CheckArgs(os.Args[2:]); isValid {
+			cmd.Exec()
+		} else {
+			showCommandHelp(os.Args[1])
+		}
+	}
 }

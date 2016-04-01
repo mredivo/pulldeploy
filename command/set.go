@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 )
 
@@ -10,20 +11,32 @@ type Set struct {
 	keep    int
 }
 
-func (cmd *Set) CheckArgs(appName string, keep int) bool {
+func (cmd *Set) CheckArgs(osArgs []string) bool {
+
+	var appName string
+	var keep int
+
+	cmdFlags := flag.NewFlagSet("set", flag.ExitOnError)
+	cmdFlags.StringVar(&appName, "app", "", "name of the application whose repository to update")
+	cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
+	cmdFlags.Parse(osArgs)
+
 	isValid := true
+
 	if appName == "" {
 		fmt.Println("app is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appName = appName
 	}
+
 	if keep < 2 {
 		fmt.Println("keep must be at least 2")
 		isValid = false
 	} else {
 		cmd.keep = keep
 	}
+
 	return isValid
 }
 

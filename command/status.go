@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 )
 
@@ -9,14 +10,23 @@ type Status struct {
 	appName string
 }
 
-func (cmd *Status) CheckArgs(appName string) bool {
+func (cmd *Status) CheckArgs(osArgs []string) bool {
+
+	var appName string
+
+	cmdFlags := flag.NewFlagSet("status", flag.ExitOnError)
+	cmdFlags.StringVar(&appName, "app", "", "name of the application")
+	cmdFlags.Parse(osArgs)
+
 	isValid := true
+
 	if appName == "" {
 		fmt.Println("app is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appName = appName
 	}
+
 	return isValid
 }
 

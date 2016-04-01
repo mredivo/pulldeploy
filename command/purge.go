@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 )
 
@@ -10,20 +11,31 @@ type Purge struct {
 	appVersion string
 }
 
-func (cmd *Purge) CheckArgs(appName, appVersion string) bool {
+func (cmd *Purge) CheckArgs(osArgs []string) bool {
+
+	var appName, appVersion string
+
+	cmdFlags := flag.NewFlagSet("purge", flag.ExitOnError)
+	cmdFlags.StringVar(&appName, "app", "", "name of the application")
+	cmdFlags.StringVar(&appVersion, "version", "", "version of the application being purged")
+	cmdFlags.Parse(osArgs)
+
 	isValid := true
+
 	if appName == "" {
 		fmt.Println("app is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appName = appName
 	}
+
 	if appVersion == "" {
 		fmt.Println("version is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appVersion = appVersion
 	}
+
 	return isValid
 }
 

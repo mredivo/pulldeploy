@@ -1,6 +1,7 @@
 package command
 
 import (
+	"flag"
 	"fmt"
 )
 
@@ -10,20 +11,31 @@ type Disable struct {
 	appVersion string
 }
 
-func (cmd *Disable) CheckArgs(appName, appVersion string) bool {
+func (cmd *Disable) CheckArgs(osArgs []string) bool {
+
+	var appName, appVersion string
+
+	cmdFlags := flag.NewFlagSet("disable", flag.ExitOnError)
+	cmdFlags.StringVar(&appName, "app", "", "name of the application")
+	cmdFlags.StringVar(&appVersion, "version", "", "version of the application being disabled")
+	cmdFlags.Parse(osArgs)
+
 	isValid := true
+
 	if appName == "" {
 		fmt.Println("app is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appName = appName
 	}
+
 	if appVersion == "" {
 		fmt.Println("version is a mandatory argument")
 		isValid = false
 	} else {
 		cmd.appVersion = appVersion
 	}
+
 	return isValid
 }
 
