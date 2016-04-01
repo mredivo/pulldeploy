@@ -15,71 +15,65 @@ const TESTAPP = "stubapp"
 
 func TestStorage(t *testing.T) {
 
+	var rs Storage
+	var err error
+
 	// An invalid StorageType should fail.
-	if _, err := NewStorage("nosuchstoragetype"); err == nil {
+	params := make(map[string]string)
+	if _, err := NewStorage("nosuchstoragetype", params); err == nil {
 		t.Errorf("Storage creation succeeded with invalid storage type")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Exercise the Local storage type.
-	if rs, err := NewStorage(KST_LOCAL); err == nil {
+	params = make(map[string]string)
 
-		// Test handling of initialization.
-		params := make(map[string]string)
-		if err := rs.Init(params); err == nil {
-			t.Errorf("%s storage initialization succeeded with missing base dir", KST_LOCAL)
-		} else {
-			fmt.Println(err.Error())
-		}
-		params["basedir"] = "../data/nosuchdir"
-		if err := rs.Init(params); err == nil {
-			t.Errorf("%s storage initialization succeeded with nonexistent base dir", KST_LOCAL)
-		} else {
-			fmt.Println(err.Error())
-		}
-
-		// Set up our local base directory, and run tests.
-		params["basedir"] = "../data/repository"
-		if err := rs.Init(params); err != nil {
-			t.Errorf("%s storage initialization failed: %s", KST_LOCAL, err.Error())
-		}
-		testStorage(t, KST_LOCAL, rs)
-
+	// Test handling of initialization.
+	if _, err := NewStorage(KST_LOCAL.String(), params); err == nil {
+		t.Errorf("%s storage initialization succeeded with missing base dir", KST_LOCAL)
 	} else {
-		t.Errorf("%s storage creation failed: %s", KST_LOCAL, err.Error())
+		fmt.Println(err.Error())
+	}
+	params["basedir"] = "../data/nosuchdir"
+	if _, err := NewStorage(KST_LOCAL.String(), params); err == nil {
+		t.Errorf("%s storage initialization succeeded with nonexistent base dir", KST_LOCAL)
+	} else {
+		fmt.Println(err.Error())
 	}
 
+	// Set up our local base directory, and run tests.
+	params["basedir"] = "../data/repository"
+	if rs, err = NewStorage(KST_LOCAL.String(), params); err != nil {
+		t.Errorf("%s storage initialization failed: %s", KST_LOCAL, err.Error())
+	}
+	testStorage(t, KST_LOCAL, rs)
+
 	// Exercise the S3 storage type.
-	if rs, err := NewStorage(KST_S3); err == nil {
+	params = make(map[string]string)
 
-		// Test handling of initialization.
-		params := make(map[string]string)
-		if err := rs.Init(params); err == nil {
-			t.Errorf("%s storage initialization succeeded with missing AWS region", KST_S3)
-		} else {
-			fmt.Println(err.Error())
-		}
-		params["awsregion"] = "nosuchregion"
-		if err := rs.Init(params); err == nil {
-			t.Errorf("%s storage initialization succeeded with invalid region", KST_S3)
-		} else {
-			fmt.Println(err.Error())
-		}
-
-		// Set up our S3 base directory, and run tests.
-		params["awsregion"] = "us-east-1"
-		params["bucket"] = "change-pulldeploy-test"
-		params["prefix"] = "unittest"
-		if err := rs.Init(params); err != nil {
-			t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
-		}
-		if doS3Tests {
-			testStorage(t, KST_S3, rs)
-		}
-
+	// Test handling of initialization.
+	if _, err := NewStorage(KST_S3.String(), params); err == nil {
+		t.Errorf("%s storage initialization succeeded with missing AWS region", KST_S3)
 	} else {
-		t.Errorf("%s storage creation failed: %s", KST_S3, err.Error())
+		fmt.Println(err.Error())
+	}
+	params["awsregion"] = "nosuchregion"
+	if _, err := NewStorage(KST_S3.String(), params); err == nil {
+		t.Errorf("%s storage initialization succeeded with invalid region", KST_S3)
+	} else {
+		fmt.Println(err.Error())
+	}
+
+	// Set up our S3 base directory, and run tests.
+	params["awsregion"] = "us-east-1"
+	params["bucket"] = "change-pulldeploy-test"
+	params["prefix"] = "unittest"
+	if rs, err = NewStorage(KST_S3.String(), params); err != nil {
+		t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
+	}
+	if doS3Tests {
+		testStorage(t, KST_S3, rs)
 	}
 }
 
