@@ -10,18 +10,20 @@ import (
 
 // pulldeploy list
 type List struct {
+	el    *ErrorList
 	pdcfg pdconfig.PDConfig
 }
 
-func (cmd *List) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
+func (cmd *List) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
+	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
 	// Define a null set, so we can complain about extraneous args.
 	cmdFlags := flag.NewFlagSet("list", flag.ExitOnError)
 	cmdFlags.Parse(osArgs)
 
-	return true
+	return cmd.el
 }
 
 func (cmd *List) Exec() {

@@ -2,13 +2,13 @@ package command
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy release -app=<app> -version=<version> -env=<env> [host1, host2, ...]
 type Release struct {
+	el         *ErrorList
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
@@ -16,11 +16,11 @@ type Release struct {
 	hosts      []string
 }
 
-func (cmd *Release) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
-
-	cmd.pdcfg = pdcfg
+func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
 	var appName, appVersion, envName string
+	cmd.el = NewErrorList(cmdName)
+	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet("release", flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
@@ -28,34 +28,29 @@ func (cmd *Release) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
 	cmdFlags.StringVar(&envName, "env", "", "environment in which to release")
 	cmdFlags.Parse(osArgs)
 
-	isValid := true
-
 	if appName == "" {
-		fmt.Println("app is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		fmt.Println("version is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
 
 	if envName == "" {
-		fmt.Println("env is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("env is a mandatory argument")
 	} else {
 		cmd.envName = envName
 	}
 
 	cmd.hosts = cmdFlags.Args()
 
-	return isValid
+	return cmd.el
 }
 
 func (cmd *Release) Exec() {
-	fmt.Printf("deploy(%s, %s, %s, %v)\n", cmd.appName, cmd.appVersion, cmd.envName, cmd.hosts)
+	placeHolder("deploy(%s, %s, %s, %v)\n", cmd.appName, cmd.appVersion, cmd.envName, cmd.hosts)
 }

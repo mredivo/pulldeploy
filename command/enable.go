@@ -2,48 +2,44 @@ package command
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy enable -app=<app> -version=<version>
 type Enable struct {
+	el         *ErrorList
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 }
 
-func (cmd *Enable) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
-
-	cmd.pdcfg = pdcfg
+func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
 	var appName, appVersion string
+	cmd.el = NewErrorList(cmdName)
+	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet("enable", flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
 	cmdFlags.StringVar(&appVersion, "version", "", "version of the application being enabled")
 	cmdFlags.Parse(osArgs)
 
-	isValid := true
-
 	if appName == "" {
-		fmt.Println("app is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		fmt.Println("version is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
 
-	return isValid
+	return cmd.el
 }
 
 func (cmd *Enable) Exec() {
-	fmt.Printf("enable(%s, %s)\n", cmd.appName, cmd.appVersion)
+	placeHolder("enable(%s, %s)\n", cmd.appName, cmd.appVersion)
 }

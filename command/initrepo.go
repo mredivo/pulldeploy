@@ -11,44 +11,41 @@ import (
 
 // pulldeploy initrepo -app=<app> [-keep=n]
 type Initrepo struct {
+	el      *ErrorList
 	pdcfg   pdconfig.PDConfig
 	appName string
 	keep    int
 }
 
-func (cmd *Initrepo) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
-
-	cmd.pdcfg = pdcfg
+func (cmd *Initrepo) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
 	var appName string
 	var keep int
+	cmd.el = NewErrorList(cmdName)
+	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet("initrepo", flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application to create in the repository")
 	cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
 	cmdFlags.Parse(osArgs)
 
-	isValid := true
-
 	if appName == "" {
-		fmt.Println("app is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if keep < 2 {
-		fmt.Println("keep must be at least 2")
-		isValid = false
+		cmd.el.Errorf("keep must be at least 2")
 	} else {
 		cmd.keep = keep
 	}
 
-	return isValid
+	return cmd.el
 }
 
 func (cmd *Initrepo) Exec() {
-	fmt.Printf("initrepo(%s, %d)\n", cmd.appName, cmd.keep)
+	placeHolder("initrepo(%s, %d)\n", cmd.appName, cmd.keep)
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {

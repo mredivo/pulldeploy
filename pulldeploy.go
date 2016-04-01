@@ -153,9 +153,12 @@ func main() {
 
 	// If a command was recognized, validate and execute it.
 	if cmd != nil {
-		if isValid := cmd.CheckArgs(pdcfg, os.Args[2:]); isValid {
+		if el := cmd.CheckArgs(os.Args[1], pdcfg, os.Args[2:]); el.Len() == 0 {
 			cmd.Exec()
 		} else {
+			for _, s := range el.Errors() {
+				fmt.Println(s)
+			}
 			showCommandHelp(os.Args[1])
 		}
 	}

@@ -2,13 +2,13 @@ package command
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 // pulldeploy upload -app=<app> -version=<version> [-disabled] <file>
 type Upload struct {
+	el         *ErrorList
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
@@ -16,12 +16,12 @@ type Upload struct {
 	filename   string
 }
 
-func (cmd *Upload) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
-
-	cmd.pdcfg = pdcfg
+func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
 	var appName, appVersion string
 	var disabled bool
+	cmd.el = NewErrorList(cmdName)
+	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet("upload", flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
@@ -29,18 +29,14 @@ func (cmd *Upload) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
 	cmdFlags.BoolVar(&disabled, "disabled", false, "upload in disabled state")
 	cmdFlags.Parse(osArgs)
 
-	isValid := true
-
 	if appName == "" {
-		fmt.Println("app is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		fmt.Println("version is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
@@ -48,18 +44,16 @@ func (cmd *Upload) CheckArgs(pdcfg pdconfig.PDConfig, osArgs []string) bool {
 	cmd.disabled = disabled
 
 	if len(cmdFlags.Args()) < 1 {
-		fmt.Println("filename is a mandatory argument")
-		isValid = false
+		cmd.el.Errorf("filename is a mandatory argument")
 	} else if len(cmdFlags.Args()) > 1 {
-		fmt.Println("only one filename may be specified")
-		isValid = false
+		cmd.el.Errorf("only one filename may be specified")
 	} else {
 		cmd.filename = cmdFlags.Args()[0]
 	}
 
-	return isValid
+	return cmd.el
 }
 
 func (cmd *Upload) Exec() {
-	fmt.Printf("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
+	placeHolder("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
 }
