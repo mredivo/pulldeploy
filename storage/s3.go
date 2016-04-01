@@ -21,7 +21,7 @@ type stS3 struct {
 }
 
 // Initialize the repository object.
-func (st *stS3) Init(params Params) error {
+func (st *stS3) init(params Params) error {
 
 	// Extract the AWS region name.
 	if regionName, ok := params["awsregion"]; ok {

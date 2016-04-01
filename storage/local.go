@@ -17,7 +17,7 @@ type stLocal struct {
 }
 
 // Initialize the repository object.
-func (st *stLocal) Init(params Params) error {
+func (st *stLocal) init(params Params) error {
 	if baseDir, ok := params["basedir"]; ok {
 		st.baseDir = absPath(baseDir)
 		if _, err := os.Stat(st.baseDir); err != nil {

@@ -11,7 +11,7 @@ type Params map[string]string
 
 // Storage provides methods to set and get repository data.
 type Storage interface {
-	Init(params Params) error                                        // Set up access parameters
+	init(params Params) error                                        // Set up access parameters
 	Get(repoPath string) ([]byte, error)                             // Retrieve data from a repository file
 	Put(repoPath string, data []byte) error                          // Write data to a repository file
 	GetReader(repoPath string) (io.ReadCloser, error)                // Open a stream to read a repository file
@@ -27,13 +27,23 @@ func (st StorageType) String() string {
 }
 
 // NewStorage returns an instance of Storage of the requested type.
-func NewStorage(st StorageType) (Storage, error) {
+func NewStorage(typestr string, params Params) (Storage, error) {
+
+	var st StorageType = StorageType(typestr)
+	var stg Storage
+
 	switch st {
 	case KST_LOCAL:
-		return &stLocal{}, nil
+		stg = &stLocal{}
 	case KST_S3:
-		return &stS3{}, nil
+		stg = &stS3{}
 	default:
 		return nil, fmt.Errorf("Invalid StorageType: %s", st.String())
 	}
+
+	if err := stg.init(params); err != nil {
+		return nil, err
+	}
+
+	return stg, nil
 }
