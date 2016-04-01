@@ -4,7 +4,7 @@ TARGET = pulldeploy
 
 BUILDDIR = build
 
-SRCLIBS = ./configloader/*go ./deployment/*go ./storage/*go ./signaller/*go
+SRCLIBS = ./configloader/*go ./deployment/*go ./storage/*go ./signaller/*go ./command/*go
 SOURCES = $(TARGET).go $(SRCLIBS)
 TESTS = ./configloader ./deployment ./storage ./signaller
 PWD = $(shell pwd)
