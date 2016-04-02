@@ -21,7 +21,7 @@ func (cmd *Set) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []stri
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("set", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application whose repository to update")
 	cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
 	cmdFlags.Parse(osArgs)

@@ -22,7 +22,7 @@ func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("release", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
 	cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be released")
 	cmdFlags.StringVar(&envName, "env", "", "environment in which to release")

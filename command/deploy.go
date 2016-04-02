@@ -21,7 +21,7 @@ func (cmd *Deploy) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("deploy", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
 	cmdFlags.StringVar(&appVersion, "version", "", "version of the application to be deployed")
 	cmdFlags.StringVar(&envName, "env", "", "environment to which to deploy")

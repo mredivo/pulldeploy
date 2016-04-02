@@ -20,7 +20,7 @@ func (cmd *List) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []str
 	cmd.pdcfg = pdcfg
 
 	// Define a null set, so we can complain about extraneous args.
-	cmdFlags := flag.NewFlagSet("list", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.Parse(osArgs)
 
 	return cmd.el

@@ -23,7 +23,7 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("upload", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
 	cmdFlags.StringVar(&appVersion, "version", "", "version of the application being uploaded")
 	cmdFlags.BoolVar(&disabled, "disabled", false, "upload in disabled state")

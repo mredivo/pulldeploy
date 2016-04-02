@@ -24,7 +24,7 @@ func (cmd *Initrepo) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs [
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("initrepo", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application to create in the repository")
 	cmdFlags.IntVar(&keep, "keep", 5, "the number of versions of app to keep in the repository")
 	cmdFlags.Parse(osArgs)

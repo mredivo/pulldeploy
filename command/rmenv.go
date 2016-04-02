@@ -20,7 +20,7 @@ func (cmd *Rmenv) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []st
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
-	cmdFlags := flag.NewFlagSet("rmenv", flag.ExitOnError)
+	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&appName, "app", "", "name of the application")
 	cmdFlags.Parse(osArgs)
 
