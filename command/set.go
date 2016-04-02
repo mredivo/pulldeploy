@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy set -app=<app> [-keep=n]
@@ -43,5 +44,30 @@ func (cmd *Set) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []stri
 
 func (cmd *Set) Exec() *ErrorList {
 	placeHolder("set(%s, %d)\n", cmd.appName, cmd.keep)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index and update it.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+		ri.Keep = cmd.keep
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.el.Append(err)
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/repo"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // Handler is the interface to which every command handler must conform.
@@ -39,6 +41,33 @@ func (el *ErrorList) Errors() []string {
 		s = append(s, el.cmdName+": "+err.Error())
 	}
 	return s
+}
+
+func getRepoIndex(stg storage.Storage, appName string) (*repo.RepoIndex, error) {
+	ri := repo.NewRepoIndex(appName)
+	if text, err := stg.Get(ri.RepoIndexPath()); err == nil {
+		if err := ri.FromJSON(text); err == nil {
+			return ri, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+func setRepoIndex(stg storage.Storage, ri *repo.RepoIndex) error {
+	ri.Canary++
+	if text, err := ri.ToJSON(); err == nil {
+		fmt.Println(string(text)) // TODO: remove this
+		if err := stg.Put(ri.RepoIndexPath(), text); err == nil {
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
 }
 
 func placeHolder(format string, a ...interface{}) {

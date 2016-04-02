@@ -35,13 +35,13 @@ type RepoIndex struct {
 }
 
 // NewRepoIndex returns a new instance of RepoIndex.
-func NewRepoIndex(appName string, keep int) *RepoIndex {
+func NewRepoIndex(appName string) *RepoIndex {
 
 	ri := new(RepoIndex)
 
 	ri.appName = strings.ToLower(appName)
 	ri.Canary = 0
-	ri.Keep = keep
+	ri.Keep = 5
 	ri.Versions = make(map[string]Version)
 	ri.Envs = make(map[string]Env)
 

@@ -2,7 +2,6 @@ package command
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/repo"
@@ -60,14 +59,16 @@ func (cmd *Initrepo) Exec() *ErrorList {
 		return cmd.el
 	}
 
+	// Do not overwrite an existing index.
+	if _, err := getRepoIndex(stg, cmd.appName); err == nil {
+		cmd.el.Errorf("repository already initialized, no action taken")
+		return cmd.el
+	}
+
 	// Initialize the index and store it.
-	ri := repo.NewRepoIndex(cmd.appName, cmd.keep)
-	if text, err := ri.ToJSON(); err == nil {
-		fmt.Println(string(text))
-		if err := stg.Put(ri.RepoIndexPath(), text); err != nil {
-			cmd.el.Append(err)
-		}
-	} else {
+	ri := repo.NewRepoIndex(cmd.appName)
+	ri.Keep = cmd.keep
+	if err := setRepoIndex(stg, ri); err != nil {
 		cmd.el.Append(err)
 	}
 
