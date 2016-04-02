@@ -4,6 +4,7 @@ package repo
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -46,6 +47,15 @@ func NewRepoIndex(appName string) *RepoIndex {
 	ri.Envs = make(map[string]Env)
 
 	return ri
+}
+
+// AddEnv inserts a new environment into the index.
+func (ri *RepoIndex) AddEnv(envName string) error {
+	if _, found := ri.Envs[envName]; found {
+		return fmt.Errorf("environment %q already present", envName)
+	}
+	ri.Envs[envName] = Env{Deployed: []string{}, Released: []string{}, Previewers: []string{}}
+	return nil
 }
 
 // RepoIndexPath returns the canonical path to the app's index in the repository.

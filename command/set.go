@@ -43,7 +43,6 @@ func (cmd *Set) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []stri
 }
 
 func (cmd *Set) Exec() *ErrorList {
-	placeHolder("set(%s, %d)\n", cmd.appName, cmd.keep)
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {

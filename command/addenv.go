@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy addenv -app=<app> envname [envname envname ...]
@@ -40,6 +41,39 @@ func (cmd *Addenv) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Addenv) Exec() *ErrorList {
-	placeHolder("addenv(%s, %v)\n", cmd.appName, cmd.envNames)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index and update it.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		for _, envName := range cmd.envNames {
+			if err := ri.AddEnv(envName); err != nil {
+				cmd.el.Append(err)
+			}
+		}
+		if cmd.el.Len() > 0 {
+			return cmd.el
+		}
+
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.el.Append(err)
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }
