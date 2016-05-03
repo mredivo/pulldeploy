@@ -58,7 +58,6 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Upload) Exec() *ErrorList {
-	//placeHolder("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
@@ -89,8 +88,8 @@ func (cmd *Upload) Exec() *ErrorList {
 			}
 
 			// Write the artifact to the repo.
-			repoFilename := ri.RepoArtifactFilename(cmd.appVersion, path.Base(cmd.filename))
-			repoPath := ri.RepoArtifactPath(repoFilename)
+			repoFilename := ri.ArtifactFilename(cmd.appVersion, path.Base(cmd.filename))
+			repoPath := ri.ArtifactPath(repoFilename)
 			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
 				cmd.el.Append(err)
 				return cmd.el

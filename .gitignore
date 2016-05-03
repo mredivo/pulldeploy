@@ -9,6 +9,6 @@ data/client/*
 data/repository/*
 
 # Generated artifacts
-build/
-version.go
-data/etc/pulldeploy.yaml
+/build/
+/version.go
+/data/etc/pulldeploy.yaml
