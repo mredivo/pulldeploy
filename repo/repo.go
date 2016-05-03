@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 )
 
@@ -58,9 +59,30 @@ func (ri *RepoIndex) AddEnv(envName string) error {
 	return nil
 }
 
+// AddVersion inserts a new version into the index.
+func (ri *RepoIndex) AddVersion(name, filename string, enabled bool) error {
+	if _, found := ri.Versions[name]; found {
+		return fmt.Errorf("version %q already present", name)
+	}
+	ri.Versions[name] = Version{Name: name, Filename: filename, Released: false, Enabled: enabled}
+	return nil
+}
+
 // RepoIndexPath returns the canonical path to the app's index in the repository.
 func (ri *RepoIndex) RepoIndexPath() string {
 	return ri.appName + "/index.json"
+}
+
+// RepoArtifactPath returns the canonical path to the indicated artifact.
+func (ri *RepoIndex) RepoArtifactPath(filename string) string {
+	return path.Join(ri.appName, "versions", filename)
+}
+
+// RepoArtifactFilename returns the canonical filename of the indicated artifact.
+func (ri *RepoIndex) RepoArtifactFilename(version, filename string) string {
+	parts := strings.Split(filename, ".")
+	ext := strings.Join(parts[1:], ".")
+	return ri.appName + "-" + version + "." + ext
 }
 
 // FromJSON materializes the index from a JSON byte array.

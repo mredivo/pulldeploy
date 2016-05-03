@@ -2,8 +2,11 @@ package command
 
 import (
 	"flag"
+	"os"
+	"path"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy upload -app=<app> -version=<version> [-disabled] <file>
@@ -55,6 +58,61 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Upload) Exec() *ErrorList {
-	placeHolder("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
+	//placeHolder("upload(%s, %s, %v, %s)\n", cmd.appName, cmd.appVersion, cmd.disabled, cmd.filename)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Open the artifact to be uploaded.
+		if fh, err := os.Open(cmd.filename); err == nil {
+			defer fh.Close()
+
+			// Determine the content length.
+			fi, err := fh.Stat()
+			if err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+
+			// Write the artifact to the repo.
+			repoFilename := ri.RepoArtifactFilename(cmd.appVersion, path.Base(cmd.filename))
+			repoPath := ri.RepoArtifactPath(repoFilename)
+			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+
+			// Update the index.
+			if err := ri.AddVersion(cmd.appVersion, repoFilename, !cmd.disabled); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+
+			// Write the index back.
+			if err := setRepoIndex(stg, ri); err != nil {
+				cmd.el.Append(err)
+			}
+		} else {
+			cmd.el.Append(err)
+			return cmd.el
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }
