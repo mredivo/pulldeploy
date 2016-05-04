@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy enable -app=<app> -version=<version>
@@ -41,6 +42,43 @@ func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Enable) Exec() *ErrorList {
-	placeHolder("enable(%s, %s)\n", cmd.appName, cmd.appVersion)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Retrieve and update the version.
+		if vers, err := ri.GetVersion(cmd.appVersion); err != nil {
+			cmd.el.Append(err)
+			return cmd.el
+		} else {
+			vers.Enable()
+			if err := ri.SetVersion(cmd.appVersion, vers); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+		}
+
+		// Write the index back.
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.el.Append(err)
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }
