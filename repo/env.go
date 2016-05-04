@@ -1,5 +1,9 @@
 package repo
 
+import (
+	"fmt"
+)
+
 // Env enumerates the versions deployed to an environment, and identifies the current release.
 type Env struct {
 	Keep       int      `json:"keep"`       // The maximum number of versions to retain when adding
@@ -17,4 +21,42 @@ func newEnv() *Env {
 
 func (env *Env) SetKeep(keep int) {
 	env.Keep = keep
+}
+
+type deployOnDelete func(versionName string)
+
+// Deploy makes an uploaded artifact available in this environment.
+func (env *Env) Deploy(versionName string, onDelete deployOnDelete) error {
+
+	// Ensure that this version of the artifact is not already deployed.
+	for _, v := range env.Deployed {
+		if v == versionName {
+			return fmt.Errorf("version %q already deployed", versionName)
+		}
+	}
+
+	// Ensure the number of entries will not exceed the cap.
+	for entryCount := len(env.Deployed); entryCount >= env.Keep; entryCount-- {
+		// Do not remove the current or immediately prior releases.
+		candidate := entryCount - 1
+		if candidate >= 0 {
+			if env.Deployed[candidate] == env.Current || env.Deployed[candidate] == env.Prev {
+				candidate-- // Skip this one
+			}
+		}
+		if candidate >= 0 {
+			if env.Deployed[candidate] == env.Current || env.Deployed[candidate] == env.Prev {
+				candidate-- // Skip this one too
+			}
+		}
+		if candidate >= 0 {
+			onDelete(env.Deployed[candidate])
+			env.Deployed = append(env.Deployed[:candidate], env.Deployed[candidate+1:]...)
+		}
+	}
+
+	// Add the new entry at the beginning of the list.
+	env.Deployed = append([]string{versionName}, env.Deployed...)
+
+	return nil
 }

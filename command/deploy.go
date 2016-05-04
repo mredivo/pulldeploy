@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy deploy -app=<app> -version=<version> -env=<env>
@@ -49,6 +50,61 @@ func (cmd *Deploy) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Deploy) Exec() *ErrorList {
-	placeHolder("deploy(%s, %s, %s)\n", cmd.appName, cmd.appVersion, cmd.envName)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Ensure the specified version has been uploaded.
+		if _, err := ri.GetVersion(cmd.appVersion); err != nil {
+			cmd.el.Append(err)
+			return cmd.el
+		}
+
+		// Retrieve and update the environment.
+		if env, err := ri.GetEnv(cmd.envName); err != nil {
+			cmd.el.Append(err)
+			return cmd.el
+		} else {
+			// This callback will be called for each entry purged from environment.
+			onDelete := func(versionName string) {
+				if vers, err := ri.GetVersion(versionName); err == nil {
+					repoPath := ri.ArtifactPath(vers.Filename)
+					_ = repoPath // TODO: Implement storage deletions.
+				}
+			}
+			// Add this one to the list of deployed versions.
+			if err := env.Deploy(cmd.appVersion, onDelete); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+			// Put the updated environment back into the index.
+			if err := ri.SetEnv(cmd.envName, env); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+		}
+
+		// Write the index back.
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.el.Append(err)
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }
