@@ -2,6 +2,7 @@ package repo
 
 // Env enumerates the versions deployed to an environment, and identifies the current release.
 type Env struct {
+	Keep       int      `json:"keep"`       // The maximum number of versions to retain when adding
 	Prev       string   `json:"prev"`       // The index into the Deployed map of a candidate version
 	Current    string   `json:"current"`    // The index into the Deployed map of the current version
 	Next       string   `json:"next"`       // The index into the Deployed map of a candidate version
@@ -11,5 +12,9 @@ type Env struct {
 }
 
 func newEnv() *Env {
-	return &Env{Deployed: []string{}, Released: []string{}, Previewers: []string{}}
+	return &Env{Keep: 5, Deployed: []string{}, Released: []string{}, Previewers: []string{}}
+}
+
+func (env *Env) SetKeep(keep int) {
+	env.Keep = keep
 }

@@ -13,7 +13,6 @@ import (
 type RepoIndex struct {
 	appName  string              // The name of the application in this index
 	Canary   int                 `json:"canary"`       // Incremented each time the index is written out
-	Keep     int                 `json:"keep"`         // The minimum number of versions to retain when purging
 	Versions map[string]*Version `json:"versions"`     // The set of versions uploaded; old entries fall off
 	Envs     map[string]*Env     `json:"environments"` // The defined environments: prod, stage, etc.
 }
@@ -25,7 +24,6 @@ func NewRepoIndex(appName string) *RepoIndex {
 
 	ri.appName = strings.ToLower(appName)
 	ri.Canary = 0
-	ri.Keep = 5
 	ri.Versions = make(map[string]*Version)
 	ri.Envs = make(map[string]*Env)
 

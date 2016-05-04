@@ -23,10 +23,10 @@ Commands:
         -v, version
 
     Repository management:
-        pulldeploy initrepo -app=<app> [-keep=n]
-        pulldeploy set      -app=<app> [-keep=n]
+        pulldeploy initrepo -app=<app>
         pulldeploy addenv   -app=<app> envname [envname envname ...]
         pulldeploy rmenv    -app=<app> envname [envname envname ...]
+        pulldeploy set      -app=<app> -env=<env> [-keep=n]
 
     Release management:
         pulldeploy upload  -app=<app> -version=<version> [-disabled] <file>
@@ -49,13 +49,13 @@ func showCommandHelp(command string) bool {
 	isValid := true
 	switch command {
 	case "initrepo":
-		fmt.Println("usage: pulldeploy initrepo -app=<app> [-keep=n]")
-	case "set":
-		fmt.Println("usage: pulldeploy set -app=<app> [-keep=n]")
+		fmt.Println("usage: pulldeploy initrepo -app=<app>")
 	case "addenv":
 		fmt.Println("usage: pulldeploy addenv -app=<app> envname [envname envname ...]")
 	case "rmenv":
 		fmt.Println("usage: pulldeploy rmenv -app=<app> envname [envname envname ...]")
+	case "set":
+		fmt.Println("usage: pulldeploy set -app=<app> -env=<env> [-keep=n]")
 	case "upload":
 		fmt.Println("usage: pulldeploy upload -app=<app> -version=<version> [-disabled] <file>")
 	case "enable":
