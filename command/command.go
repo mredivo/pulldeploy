@@ -59,7 +59,6 @@ func getRepoIndex(stg storage.Storage, appName string) (*repo.RepoIndex, error) 
 func setRepoIndex(stg storage.Storage, ri *repo.RepoIndex) error {
 	ri.Canary++
 	if text, err := ri.ToJSON(); err == nil {
-		fmt.Println(string(text)) // TODO: remove this
 		if err := stg.Put(ri.IndexPath(), text); err == nil {
 			return nil
 		} else {

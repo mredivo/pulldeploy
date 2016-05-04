@@ -2,8 +2,10 @@ package command
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy status -app=<app>
@@ -33,6 +35,35 @@ func (cmd *Status) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 }
 
 func (cmd *Status) Exec() *ErrorList {
-	placeHolder("status(%s)\n", cmd.appName)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Print a summary of the state of the application.
+		// TODO: replace this simple JSON dump
+		if text, err := ri.ToJSON(); err == nil {
+			fmt.Println(string(text))
+		} else {
+			cmd.el.Append(err)
+			return cmd.el
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }
