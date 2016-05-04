@@ -59,12 +59,15 @@ func (cmd *Addenv) Exec() *ErrorList {
 	// Retrieve the repository index and update it.
 	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
 
+		successCount := 0
 		for _, envName := range cmd.envNames {
 			if err := ri.AddEnv(envName); err != nil {
 				cmd.el.Append(err)
+			} else {
+				successCount++
 			}
 		}
-		if cmd.el.Len() > 0 {
+		if successCount == 0 {
 			return cmd.el
 		}
 
