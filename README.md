@@ -37,10 +37,10 @@ Commands:
         -v, version
 
     Repository management:
-        pulldeploy initrepo -app=<app> [-keep=n]
-        pulldeploy set      -app=<app> [-keep=n]
+        pulldeploy initrepo -app=<app>
         pulldeploy addenv   -app=<app> envname [envname envname ...]
         pulldeploy rmenv    -app=<app> envname [envname envname ...]
+        pulldeploy set      -app=<app> -env=<env> [-keep=n]
 
     Release management:
         pulldeploy upload  -app=<app> -version=<version> [-disabled] <file>
