@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/signaller"
 	"github.com/mredivo/pulldeploy/storage"
 )
 
@@ -68,6 +69,11 @@ func (cmd *Release) Exec() *ErrorList {
 		return cmd.el
 	}
 
+	// Open the signaller, for notifying the pulldeploy daemons.
+	sgnlr := signaller.NewClient(cmd.pdcfg.GetSignallerConfig())
+	sgnlr.Open()
+	defer sgnlr.Close()
+
 	// Retrieve the repository index.
 	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
 
@@ -93,7 +99,12 @@ func (cmd *Release) Exec() *ErrorList {
 		// Write the index back.
 		if err := setRepoIndex(stg, ri); err != nil {
 			cmd.el.Append(err)
+			return cmd.el
 		}
+
+		// Send out a notification.
+		sgnlr.Notify(cmd.envName, cmd.appName, []byte{})
+
 	} else {
 		cmd.el.Append(err)
 	}

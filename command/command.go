@@ -70,5 +70,5 @@ func setRepoIndex(stg storage.Storage, ri *repo.RepoIndex) error {
 }
 
 func placeHolder(format string, a ...interface{}) {
-	fmt.Printf(format, a...)
+	fmt.Printf("NOTIMPLEMENTED: "+format, a...)
 }

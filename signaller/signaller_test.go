@@ -18,32 +18,32 @@ func TestSignaller(t *testing.T) {
 func withZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(pdconfig.SignallerConfig{
+	sgnlr := NewClient(&pdconfig.SignallerConfig{
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
 	})
-	sgnlr.Open()
+	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 
-	testSignalling(t, sgnlr)
+	testSignalling(t, sgnlr, notifChan)
 }
 
 func withoutZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(pdconfig.SignallerConfig{
+	sgnlr := NewClient(&pdconfig.SignallerConfig{
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{}, ""},
 	})
-	sgnlr.Open()
+	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 
-	testSignalling(t, sgnlr)
+	testSignalling(t, sgnlr, notifChan)
 }
 
-func testSignalling(t *testing.T, sgnlr *Signaller) {
+func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notification) {
 
 	// The conditions we are checking for.
 	var eIsZK, eConnected, eDisconnected, eNotified bool
@@ -51,7 +51,7 @@ func testSignalling(t *testing.T, sgnlr *Signaller) {
 	// Listen for events.
 	var unittestWG sync.WaitGroup
 	watchPath := sgnlr.makeAppWatchPath("prod", "myapp")
-	notifChan := sgnlr.GetNotificationChannel("prod", "myapp")
+	sgnlr.Monitor("prod", "myapp")
 	unittestWG.Add(1)
 	var unittestMutex sync.Mutex // Prevent races in the unit test itself
 	go func() {

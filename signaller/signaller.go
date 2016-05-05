@@ -13,49 +13,49 @@ import (
 
 // Signaller is used to notify running daemons of deploy and release activity.
 type Signaller struct {
-	self      sync.RWMutex                  // Mutex to control access to this struct
-	cfg       pdconfig.SignallerConfig      // The signaller configuration
-	wg        sync.WaitGroup                // A waitgroup to monitor lifetime of all goroutines
-	quit      chan struct{}                 // Closing this channel causes all goroutines to exit
-	zkConn    *zk.Conn                      // The connection to Zookeeper, if used, else nil
-	connState chan bool                     // The channel on which we propagate session events
-	notifiers map[string]*chan Notification // A map of all the notifiers return, keyed by path
+	self      sync.RWMutex             // Mutex to control access to this struct
+	cfg       pdconfig.SignallerConfig // The signaller configuration
+	wg        sync.WaitGroup           // A waitgroup to monitor lifetime of all goroutines
+	quit      chan struct{}            // Closing this channel causes all goroutines to exit
+	zkConn    *zk.Conn                 // The connection to Zookeeper, if used, else nil
+	connState chan bool                // The channel on which we watch session state
+	appChange chan Notification        // The channel on which we propagate app events
+	watches   map[string]interface{}   // A lookup table of all the watched paths
 }
 
 // NewCient returns a new Signaller.
-func NewClient(cfg pdconfig.SignallerConfig) *Signaller {
+func NewClient(cfg *pdconfig.SignallerConfig) *Signaller {
 
 	// Create object, apply arguments.
 	sgnlr := &Signaller{}
-	sgnlr.cfg = cfg
+	sgnlr.cfg = *cfg
 
 	// Create internal resources.
 	sgnlr.quit = make(chan struct{}, 1)
 	sgnlr.connState = make(chan bool, 10)
-	sgnlr.notifiers = make(map[string]*chan Notification)
+	sgnlr.appChange = make(chan Notification, 100)
+	sgnlr.watches = make(map[string]interface{})
 
 	return sgnlr
 }
 
 // Open allocates the resources needed for generating notifications.
-func (sgnlr *Signaller) Open() {
+func (sgnlr *Signaller) Open() <-chan Notification {
 
 	// No locking: handled separately in each called method.
 
 	// If we have a Zookeeper server list, open a connection and monitor it.
 	if len(sgnlr.cfg.ZK.Servers) > 0 {
-
-		// Return immediately if we already have a connection.
-		if sgnlr.getZKConnWithLock() != nil {
-			return
+		// Only do this once.
+		if sgnlr.getZKConnWithLock() == nil {
+			var connEvent <-chan zk.Event
+			connEvent = sgnlr.connectWithLock()
+			sgnlr.wg.Add(1)
+			go sgnlr.monitorConnection(connEvent)
 		}
-
-		// Open a connection, and monitor it.
-		var connEvent <-chan zk.Event
-		connEvent = sgnlr.connectWithLock()
-		sgnlr.wg.Add(1)
-		go sgnlr.monitorConnection(connEvent)
 	}
+
+	return sgnlr.appChange
 }
 
 // Close deallocates resources allocated by Open.
@@ -76,9 +76,8 @@ func (sgnlr *Signaller) Close() {
 	sgnlr.zkConn = nil
 }
 
-// GetNotificationChannel returns a channel that delivers notifications for the
-// given environment and application.
-func (sgnlr *Signaller) GetNotificationChannel(envName, appName string) <-chan Notification {
+// Monitor watches for changes in the given environment and application.
+func (sgnlr *Signaller) Monitor(envName, appName string) {
 
 	sgnlr.self.RLock()
 	defer sgnlr.self.RUnlock()
@@ -86,9 +85,9 @@ func (sgnlr *Signaller) GetNotificationChannel(envName, appName string) <-chan N
 	// Assemble the path for these notifications.
 	watchPath := sgnlr.makeAppWatchPath(envName, appName)
 
-	// Allow only one notification channel per path.
-	if notifChan, found := sgnlr.notifiers[watchPath]; found {
-		return *notifChan
+	// Do nothing if this path is already being watched.
+	if _, found := sgnlr.watches[watchPath]; found {
+		return
 	}
 
 	// Set the regular non-Zookeeper polling interval.
@@ -106,13 +105,12 @@ func (sgnlr *Signaller) GetNotificationChannel(envName, appName string) <-chan N
 		zkEvent = make(chan zk.Event, 1)
 	}
 
-	// Save the notifier under the watchPath, and start a watcher for it.
+	// Record the watchPath, and start a watcher for it.
 	sgnlr.wg.Add(1)
-	var notifChan chan Notification = make(chan Notification, 1)
-	sgnlr.notifiers[watchPath] = &notifChan
-	go sgnlr.monitorNode(notifChan, envName, appName, watchPath, zkEvent, numSeconds)
+	sgnlr.watches[watchPath] = nil
+	go sgnlr.monitorNode(sgnlr.appChange, envName, appName, watchPath, zkEvent, numSeconds)
 
-	return notifChan
+	return
 }
 
 // Notify sends a notication to all listening daemons in the specified environment.
