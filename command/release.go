@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy release -app=<app> -version=<version> -env=<env> [host1, host2, ...]
@@ -52,6 +53,50 @@ func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []
 }
 
 func (cmd *Release) Exec() *ErrorList {
-	placeHolder("deploy(%s, %s, %s, %v)\n", cmd.appName, cmd.appVersion, cmd.envName, cmd.hosts)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	if err != nil {
+		cmd.el.Append(err)
+		return cmd.el
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Retrieve the environment.
+		if env, err := ri.GetEnv(cmd.envName); err != nil {
+			cmd.el.Append(err)
+			return cmd.el
+		} else {
+
+			// Indicate that this is the currently active version.
+			if err := env.Release(cmd.appVersion, cmd.hosts); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+
+			// Put the updated environment back into the index.
+			if err := ri.SetEnv(cmd.envName, env); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+		}
+
+		// Write the index back.
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.el.Append(err)
+		}
+	} else {
+		cmd.el.Append(err)
+	}
+
 	return cmd.el
 }

@@ -16,9 +16,6 @@ func TestRepoIndex(t *testing.T) {
 	if ri.Canary != 0 {
 		t.Errorf("RepoIndex Canary not correctly set")
 	}
-	if ri.Keep != 5 {
-		t.Errorf("RepoIndex Keep not correctly set")
-	}
 	if len(ri.Versions) != 0 {
 		t.Errorf("RepoIndex Versions[] not correctly set")
 	}
@@ -76,16 +73,16 @@ func TestRepoIndexEnvs(t *testing.T) {
 
 	// Update the environment, and confirm that the change sticks.
 	env, _ := ri.GetEnv(envName)
-	if env.Next != "" {
-		t.Errorf("RepoIndex unexpected Next; should be blank")
+	if env.Preview != "" {
+		t.Errorf("RepoIndex unexpected Preview; should be blank")
 	}
-	env.Next = "1.0.2"
+	env.Preview = "1.0.2"
 	if err := ri.SetEnv(envName, env); err != nil {
 		t.Errorf("RepoIndex SetEnv failed: %s", err.Error())
 	}
 	env, _ = ri.GetEnv(envName)
-	if env.Next != "1.0.2" {
-		t.Errorf("RepoIndex unexpected Next; should be \"1.0.2\"")
+	if env.Preview != "1.0.2" {
+		t.Errorf("RepoIndex unexpected Preview; should be \"1.0.2\"")
 	}
 
 	// Remove the environment.
