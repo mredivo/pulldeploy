@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	dplmt "github.com/mredivo/pulldeploy/deployment"
 	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/storage"
 )
@@ -60,7 +61,8 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 func (cmd *Upload) Exec() *ErrorList {
 
 	// Ensure the app definition exists.
-	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+	appCfg, err := cmd.pdcfg.GetAppConfig(cmd.appName)
+	if err != nil {
 		cmd.el.Append(err)
 		return cmd.el
 	}
@@ -91,6 +93,19 @@ func (cmd *Upload) Exec() *ErrorList {
 			repoFilename := ri.ArtifactFilename(cmd.appVersion, path.Base(cmd.filename))
 			repoPath := ri.ArtifactPath(repoFilename)
 			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
+				cmd.el.Append(err)
+				return cmd.el
+			}
+
+			// Calculate the artifact HMAC and write that to the repo.
+			if fh, err := os.Open(cmd.filename); err == nil {
+				signature := dplmt.CalculateHMAC(fh, dplmt.NewHMACCalculator(appCfg.Secret))
+				sigPath := ri.SignaturePath(repoFilename)
+				if err := stg.Put(sigPath, signature); err != nil {
+					cmd.el.Append(err)
+					return cmd.el
+				}
+			} else {
 				cmd.el.Append(err)
 				return cmd.el
 			}

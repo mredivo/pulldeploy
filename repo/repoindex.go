@@ -106,6 +106,11 @@ func (ri *RepoIndex) ArtifactPath(filename string) string {
 	return path.Join(ri.appName, "versions", filename)
 }
 
+// SignatureFilename returns the signature filename for the indicated artifact.
+func (ri *RepoIndex) SignaturePath(filename string) string {
+	return ri.ArtifactPath(filename) + ".hmac"
+}
+
 // ArtifactFilename returns the canonical filename of the indicated artifact.
 func (ri *RepoIndex) ArtifactFilename(version, filename string) string {
 	parts := strings.Split(filename, ".")
