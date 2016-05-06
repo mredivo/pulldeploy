@@ -112,10 +112,8 @@ func (ri *RepoIndex) SignaturePath(filename string) string {
 }
 
 // ArtifactFilename returns the canonical filename of the indicated artifact.
-func (ri *RepoIndex) ArtifactFilename(version, filename string) string {
-	parts := strings.Split(filename, ".")
-	ext := strings.Join(parts[1:], ".")
-	return ri.appName + "-" + version + "." + ext
+func (ri *RepoIndex) ArtifactFilename(version, artifactType string) string {
+	return ri.appName + "-" + version + "." + artifactType
 }
 
 // FromJSON materializes the index from a JSON byte array.

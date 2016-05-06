@@ -3,7 +3,6 @@ package command
 import (
 	"flag"
 	"os"
-	"path"
 
 	dplmt "github.com/mredivo/pulldeploy/deployment"
 	"github.com/mredivo/pulldeploy/pdconfig"
@@ -90,7 +89,7 @@ func (cmd *Upload) Exec() *ErrorList {
 			}
 
 			// Write the artifact to the repo.
-			repoFilename := ri.ArtifactFilename(cmd.appVersion, path.Base(cmd.filename))
+			repoFilename := ri.ArtifactFilename(cmd.appVersion, appCfg.ArtifactType)
 			repoPath := ri.ArtifactPath(repoFilename)
 			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
 				cmd.el.Append(err)

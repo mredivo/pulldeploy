@@ -26,11 +26,12 @@ type StorageConfig struct {
 // AppConfig contains the definition of each PullDeploy client application,
 // loaded from /etc/pulldeploy.d/<appname>.json
 type AppConfig struct {
-	Description string // A short description of the application
-	Secret      string // The secret used to sign the deployment package
-	Directory   string // The base directory of the deployment on the app server
-	User        string // The user that should own all deployed artifacts
-	Group       string // The group that should own all deployed artifacts
+	Description  string // A short description of the application
+	Secret       string // The secret used to sign the deployment package
+	ArtifactType string // The file extension; determines unpacking method
+	Directory    string // The base directory of the deployment on the app server
+	User         string // The user that should own all deployed artifacts
+	Group        string // The group that should own all deployed artifacts
 }
 
 // The definition of the configuration object shared throughout PullDeploy.
