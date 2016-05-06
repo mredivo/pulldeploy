@@ -1,8 +1,6 @@
 package deployment
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"fmt"
 	"os"
 	"testing"
@@ -12,8 +10,7 @@ func TestDeploymentOperations(t *testing.T) {
 
 	const TESTAPP = "stubapp"
 
-	hmacKey := []byte("the quick brown fox jumps over the lazy dog")
-	hmacCalculator := hmac.New(sha256.New, hmacKey)
+	secret := "the quick brown fox jumps over the lazy dog"
 
 	badHMAC := []byte("Invalid HMAC value for testing")
 	goodHMAC := []byte("\x13\xb4\x8c\\\x8a\xb9-]\xb5\xdbʱA ̙\x83\xd8.8\x94\x06\"\xb13\xc5\xf3\xf7\xf8\x16\xde\x02")
@@ -23,34 +20,34 @@ func TestDeploymentOperations(t *testing.T) {
 	dep := new(Deployment)
 
 	// Test the failure modes.
-	if err := dep.Init(TESTAPP, "tar.gz", "", 0, 0); err == nil {
+	if err := dep.Init(TESTAPP, secret, "tar.gz", "", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init("", "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
+	if err := dep.Init("", secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing base dir")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, "tar.gz", "/", 0, 0); err == nil {
+	if err := dep.Init(TESTAPP, secret, "tar.gz", "/", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with root dir \"/\"")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, "tar.gz", "/foo", 0, 0); err == nil {
+	if err := dep.Init(TESTAPP, secret, "tar.gz", "/foo", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with root path too short")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
+	if err := dep.Init(TESTAPP, secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with bad root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Create a Deployment for further testing.
-	if err := dep.Init(TESTAPP, "tar.gz", "../data/client", 1001, 1001); err != nil {
+	if err := dep.Init(TESTAPP, secret, "tar.gz", "../data/client", 1001, 1001); err != nil {
 		t.Errorf("Deployment initialization failed: %s", err.Error())
 	}
 
@@ -80,7 +77,7 @@ func TestDeploymentOperations(t *testing.T) {
 	}
 
 	// Validate the signature.
-	if err := dep.CheckSignature("1.0.3", hmacCalculator); err != nil {
+	if err := dep.CheckSignature("1.0.3"); err != nil {
 		fmt.Printf("CheckSignature failed: %s\n", err.Error())
 	} else {
 		t.Errorf("CheckSignature succeeded, but should not have\n")
@@ -92,7 +89,7 @@ func TestDeploymentOperations(t *testing.T) {
 	}
 
 	// Validate the signature.
-	if err := dep.CheckSignature("1.0.3", hmacCalculator); err != nil {
+	if err := dep.CheckSignature("1.0.3"); err != nil {
 		t.Errorf("CheckSignature failed: %s\n", err.Error())
 	} else {
 		fmt.Printf("CheckSignature succeeded\n")

@@ -5,7 +5,6 @@ import (
 	"crypto/hmac"
 	"errors"
 	"fmt"
-	"hash"
 	"io"
 	"io/ioutil"
 	"os"
@@ -22,6 +21,7 @@ const kHMACSUFFIX = ".hmac"
 // Deployment provides methods for manipulating local deployment files.
 type Deployment struct {
 	appName     string // The name of the application
+	secret      string // The secret used to sign artifacts
 	suffix      string // The artifact type, expressed as a file suffix
 	uid         int    // The UID to own all files for this deployment
 	gid         int    // The GID to own all files for this deployment
@@ -32,10 +32,11 @@ type Deployment struct {
 
 // Initialize the local deployment object.
 // Currently supports "tar.gz" as an artifact type.
-func (d *Deployment) Init(appName, artifactType, baseDir string, uid, gid int) error {
+func (d *Deployment) Init(appName, secret, artifactType, baseDir string, uid, gid int) error {
 
 	// Capture the supplied arguments.
 	d.appName = appName
+	d.secret = secret
 	d.suffix = artifactType
 	d.uid = uid
 	d.gid = gid
@@ -144,7 +145,7 @@ func (d *Deployment) WriteSignature(version string, hmac []byte) error {
 
 // CheckSignature confirms that the artifact has not been corrupted or
 // tampered with by checking its HMAC.
-func (d *Deployment) CheckSignature(version string, hmacCalculator hash.Hash) error {
+func (d *Deployment) CheckSignature(version string) error {
 
 	// Build the filenames.
 	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
@@ -158,15 +159,7 @@ func (d *Deployment) CheckSignature(version string, hmacCalculator hash.Hash) er
 
 		// Open the artifact, and calculate its HMAC.
 		if fp, err := os.Open(artifactPath); err == nil {
-			defer fp.Close()
-
-			var buf []byte = make([]byte, 16384)
-			hmacCalculator.Reset()
-			for n, err := fp.Read(buf); n > 0 && err == nil; n, err = fp.Read(buf) {
-				hmacCalculator.Write(buf)
-			}
-
-			messageMAC := hmacCalculator.Sum(nil)
+			messageMAC := CalculateHMAC(fp, NewHMACCalculator(d.secret))
 			if !hmac.Equal(messageMAC, expectedMAC) {
 				return fmt.Errorf(
 					"Artifact is corrupt: Expected HMAC: %q: Calculated HMAC: %q",
