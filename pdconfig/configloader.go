@@ -83,41 +83,19 @@ func loadAppConfig(configDir, appName string) (*AppConfig, error) {
 	return appcfg, nil
 }
 
-// LoadPulldeployConfig loads the main configuration file and all the client apps.
-func LoadPulldeployConfig() (PDConfig, []error) {
+// loadAppList reads in the definitions of all the configured applications.
+func loadAppList(configDir string) (map[string]*AppConfig, []error) {
 
 	var errs []error = make([]error, 0)
-	var pdconfig *pdConfig = new(pdConfig)
-	pdconfig.appList = make(map[string]*AppConfig)
+	var appList = make(map[string]*AppConfig)
 
-	// Determine which configuration directory to use.
-	if configDir, err := findConfigDir(); err == nil {
-		pdconfig.configDir = configDir
-		pdconfig.configFile = path.Join(configDir, kCONFIG_FILENAME)
-	} else {
-		errs = append(errs, err)
-		return nil, errs
-	}
-
-	// Read in the YAML and decode it.
-	text, err := ioutil.ReadFile(pdconfig.configFile)
-	if err == nil {
-		err = yaml.Unmarshal(text, &pdconfig)
-	} else {
-		errs = append(errs, fmt.Errorf(
-			"Unable to read configuration file %q: %s",
-			pdconfig.configFile, err.Error()))
-		return nil, errs
-	}
-
-	// Read in all the client application definitions.
-	if files, err := ioutil.ReadDir(path.Join(pdconfig.configDir, kCONFIG_APP_DIR)); err == nil {
+	if files, err := ioutil.ReadDir(path.Join(configDir, kCONFIG_APP_DIR)); err == nil {
 		for _, file := range files {
 			filename := file.Name()
 			if path.Ext(filename) == ".json" {
 				appName := strings.TrimSuffix(filename, kCONFIG_APP_EXT)
-				if ac, err := loadAppConfig(pdconfig.configDir, appName); err == nil {
-					pdconfig.appList[appName] = ac
+				if ac, err := loadAppConfig(configDir, appName); err == nil {
+					appList[appName] = ac
 				} else {
 					errs = append(errs, err)
 				}
@@ -125,5 +103,42 @@ func LoadPulldeployConfig() (PDConfig, []error) {
 		}
 	}
 
-	return pdconfig, errs
+	return appList, errs
+}
+
+// LoadPulldeployConfig loads the main configuration file and all the client apps.
+func LoadPulldeployConfig() (PDConfig, []error) {
+
+	var errs []error = make([]error, 0)
+	var pdcfg *pdConfig = new(pdConfig)
+
+	// Determine which configuration directory to use.
+	if configDir, err := findConfigDir(); err == nil {
+		pdcfg.configDir = configDir
+		pdcfg.configFile = path.Join(configDir, kCONFIG_FILENAME)
+	} else {
+		errs = append(errs, err)
+		return nil, errs
+	}
+
+	// Read in the YAML and decode it.
+	text, err := ioutil.ReadFile(pdcfg.configFile)
+	if err == nil {
+		err = yaml.Unmarshal(text, &pdcfg)
+	} else {
+		errs = append(errs, fmt.Errorf(
+			"Unable to read configuration file %q: %s",
+			pdcfg.configFile, err.Error()))
+		return nil, errs
+	}
+
+	// Read in all the client application definitions.
+	if appList, appErrs := loadAppList(pdcfg.configDir); len(appErrs) == 0 {
+		pdcfg.appList = appList
+	} else {
+		pdcfg.appList = make(map[string]*AppConfig)
+		errs = append(errs, appErrs...)
+	}
+
+	return pdcfg, errs
 }

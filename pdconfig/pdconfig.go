@@ -40,6 +40,7 @@ type PDConfig interface {
 	GetStorageConfig() *StorageConfig
 	GetAppConfig(appName string) (*AppConfig, error)
 	GetAppList() map[string]*AppConfig
+	RefreshAppList() []error
 }
 
 // GetSignallerConfig returns the polling and Zookeeper information.
@@ -85,4 +86,15 @@ func (pdcfg *pdConfig) GetAppList() map[string]*AppConfig {
 	}
 
 	return appList
+}
+
+// RefreshAppList re-reads the definitions of all the configured applications.
+func (pdcfg *pdConfig) RefreshAppList() []error {
+	var errs []error = make([]error, 0)
+	if appList, appErrs := loadAppList(pdcfg.configDir); appErrs == nil {
+		pdcfg.appList = appList
+	} else {
+		errs = appErrs
+	}
+	return errs
 }
