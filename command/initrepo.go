@@ -44,7 +44,7 @@ func (cmd *Initrepo) Exec() *ErrorList {
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
-	stg, err := storage.NewStorage(stgcfg.Type, stgcfg.Params)
+	stg, err := storage.New(storage.StorageType(stgcfg.Type), stgcfg.Params)
 	if err != nil {
 		cmd.el.Append(err)
 		return cmd.el

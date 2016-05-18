@@ -1,3 +1,4 @@
+// Package command implements the handlers for the PullDeploy sub-commands.
 package command
 
 import (

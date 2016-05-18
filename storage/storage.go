@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-// Params is our way of making Init() polymorphic.
+// Params is how storage-type-specific parameters are passed to New.
 type Params map[string]string
 
 // Storage provides methods to set and get repository data.
@@ -26,10 +26,10 @@ func (st StorageType) String() string {
 	return string(st)
 }
 
-// NewStorage returns an instance of Storage of the requested type.
-func NewStorage(typestr string, params Params) (Storage, error) {
+// New returns an instance of Storage of the requested type.
+func New(st StorageType, params Params) (Storage, error) {
 
-	var st StorageType = StorageType(typestr)
+	//var st StorageType = StorageType(typestr)
 	var stg Storage
 
 	switch st {

@@ -9,7 +9,15 @@ import (
 	"github.com/goamz/goamz/s3"
 )
 
-// Repository data should be stored in Amazon S3.
+/*
+Repository data is stored in Amazon S3.
+
+Valid Params for KST_S3:
+
+	* "awsregion"   The code for the AWS Region, for example "us-east-1"
+	* "bucket"      The name of the AWS bucket
+	* "prefix"      An optional prefix for the bucket contents, for example "pulldeploy"
+*/
 const KST_S3 StorageType = "s3"
 
 // stS3 is used for PullDeploy repositories in Amazon S3.

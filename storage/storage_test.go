@@ -20,7 +20,7 @@ func TestStorage(t *testing.T) {
 
 	// An invalid StorageType should fail.
 	params := make(map[string]string)
-	if _, err := NewStorage("nosuchstoragetype", params); err == nil {
+	if _, err := New("nosuchstoragetype", params); err == nil {
 		t.Errorf("Storage creation succeeded with invalid storage type")
 	} else {
 		fmt.Println(err.Error())
@@ -30,13 +30,13 @@ func TestStorage(t *testing.T) {
 	params = make(map[string]string)
 
 	// Test handling of initialization.
-	if _, err := NewStorage(KST_LOCAL.String(), params); err == nil {
+	if _, err := New(KST_LOCAL, params); err == nil {
 		t.Errorf("%s storage initialization succeeded with missing base dir", KST_LOCAL)
 	} else {
 		fmt.Println(err.Error())
 	}
 	params["basedir"] = "../data/nosuchdir"
-	if _, err := NewStorage(KST_LOCAL.String(), params); err == nil {
+	if _, err := New(KST_LOCAL, params); err == nil {
 		t.Errorf("%s storage initialization succeeded with nonexistent base dir", KST_LOCAL)
 	} else {
 		fmt.Println(err.Error())
@@ -44,7 +44,7 @@ func TestStorage(t *testing.T) {
 
 	// Set up our local base directory, and run tests.
 	params["basedir"] = "../data/repository"
-	if rs, err = NewStorage(KST_LOCAL.String(), params); err != nil {
+	if rs, err = New(KST_LOCAL, params); err != nil {
 		t.Errorf("%s storage initialization failed: %s", KST_LOCAL, err.Error())
 	}
 	testStorage(t, KST_LOCAL, rs)
@@ -53,13 +53,13 @@ func TestStorage(t *testing.T) {
 	params = make(map[string]string)
 
 	// Test handling of initialization.
-	if _, err := NewStorage(KST_S3.String(), params); err == nil {
+	if _, err := New(KST_S3, params); err == nil {
 		t.Errorf("%s storage initialization succeeded with missing AWS region", KST_S3)
 	} else {
 		fmt.Println(err.Error())
 	}
 	params["awsregion"] = "nosuchregion"
-	if _, err := NewStorage(KST_S3.String(), params); err == nil {
+	if _, err := New(KST_S3, params); err == nil {
 		t.Errorf("%s storage initialization succeeded with invalid region", KST_S3)
 	} else {
 		fmt.Println(err.Error())
@@ -69,7 +69,7 @@ func TestStorage(t *testing.T) {
 	params["awsregion"] = "us-east-1"
 	params["bucket"] = "change-pulldeploy-test"
 	params["prefix"] = "unittest"
-	if rs, err = NewStorage(KST_S3.String(), params); err != nil {
+	if rs, err = New(KST_S3, params); err != nil {
 		t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
 	}
 	if doS3Tests {

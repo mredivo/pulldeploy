@@ -8,7 +8,13 @@ import (
 	"path"
 )
 
-// Repository data should be stored in the local filesystem.
+/*
+Repository data is stored in the local filesystem.
+
+Valid Params for KST_LOCAL:
+
+	* "basedir" The full path to the directory containing the repository
+*/
 const KST_LOCAL StorageType = "local"
 
 // stLocal is used for PullDeploy repositories on the local filesystem.
