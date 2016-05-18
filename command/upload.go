@@ -98,9 +98,9 @@ func (cmd *Upload) Exec() *ErrorList {
 
 			// Calculate the artifact HMAC and write that to the repo.
 			if fh, err := os.Open(cmd.filename); err == nil {
-				signature := deployment.CalculateHMAC(fh, deployment.NewHMACCalculator(appCfg.Secret))
-				sigPath := ri.SignaturePath(repoFilename)
-				if err := stg.Put(sigPath, signature); err != nil {
+				hmac := deployment.CalculateHMAC(fh, deployment.NewHMACCalculator(appCfg.Secret))
+				hmacPath := ri.HMACPath(repoFilename)
+				if err := stg.Put(hmacPath, hmac); err != nil {
 					cmd.el.Append(err)
 					return cmd.el
 				}

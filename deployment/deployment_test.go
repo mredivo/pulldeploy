@@ -71,27 +71,27 @@ func TestDeploymentOperations(t *testing.T) {
 	}
 
 	// Write an invalid HMAC.
-	if err := dep.WriteSignature("1.0.3", badHMAC); err != nil {
-		t.Errorf("WriteSignature failed: %s", err.Error())
+	if err := dep.WriteHMAC("1.0.3", badHMAC); err != nil {
+		t.Errorf("WriteHMAC failed: %s", err.Error())
 	}
 
-	// Validate the signature.
-	if err := dep.CheckSignature("1.0.3"); err != nil {
-		fmt.Printf("CheckSignature failed: %s\n", err.Error())
+	// Validate the HMAC.
+	if err := dep.CheckHMAC("1.0.3"); err != nil {
+		fmt.Printf("CheckHMAC failed: %s\n", err.Error())
 	} else {
-		t.Errorf("CheckSignature succeeded, but should not have\n")
+		t.Errorf("CheckHMAC succeeded, but should not have\n")
 	}
 
 	// Write a valid HMAC.
-	if err := dep.WriteSignature("1.0.3", goodHMAC); err != nil {
-		t.Errorf("WriteSignature failed: %s", err.Error())
+	if err := dep.WriteHMAC("1.0.3", goodHMAC); err != nil {
+		t.Errorf("WriteHMAC failed: %s", err.Error())
 	}
 
-	// Validate the signature.
-	if err := dep.CheckSignature("1.0.3"); err != nil {
-		t.Errorf("CheckSignature failed: %s\n", err.Error())
+	// Validate the HMAC.
+	if err := dep.CheckHMAC("1.0.3"); err != nil {
+		t.Errorf("CheckHMAC failed: %s\n", err.Error())
 	} else {
-		fmt.Printf("CheckSignature succeeded\n")
+		fmt.Printf("CheckHMAC succeeded\n")
 	}
 
 	// Extract the artifact into the release directory.

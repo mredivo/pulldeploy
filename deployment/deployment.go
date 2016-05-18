@@ -166,8 +166,8 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	return nil
 }
 
-// WriteSignature writes an HMAC into the artifact area.
-func (d *Deployment) WriteSignature(version string, hmac []byte) error {
+// WriteHMAC writes an HMAC into the artifact area.
+func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 
 	// Generate the filename, write to file, set ownership.
 	hmacPath, _ := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
@@ -182,9 +182,9 @@ func (d *Deployment) WriteSignature(version string, hmac []byte) error {
 	return nil
 }
 
-// CheckSignature confirms that the artifact has not been corrupted or
-// tampered with by checking its HMAC.
-func (d *Deployment) CheckSignature(version string) error {
+// CheckHMAC confirms that the artifact has not been corrupted or tampered with by
+// calculating its HMAC and comparing it with the retrieved HMAC.
+func (d *Deployment) CheckHMAC(version string) error {
 
 	// Build the filenames.
 	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)

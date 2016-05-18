@@ -12,7 +12,7 @@ Nearly complete, but not operational yet.
 * Once daemon is installed, no further interaction with application hosts is required
 * Artifact repository management can be automated in CI, or done from laptops
 * Artifact repository is normally in S3, but can reside elsewhere
-* Artifacts can be signed, and will not be deployed if signature checking fails
+* Artifacts can be signed, and will not be deployed if HMAC checking fails
 * Versions can have arbitrary names; VCS SHA1, CI build number, etc.
 * Deployment can be to a subset of the hosts running an application
 * Multiple applications can be managed on one application host
