@@ -1,5 +1,4 @@
-/** PullDeploy -- A Release Manager for Single-Artifact Deploys.
- */
+// A release manager for single-artifact deploys.
 package main
 
 import (
