@@ -50,5 +50,5 @@ endif
 
 build: $(BUILDDIR)/$(TARGET)
 
-$(BUILDDIR)/$(TARGET): $(SOURCES) version.go
-	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go version.go
+$(BUILDDIR)/$(TARGET): $(SOURCES) doc.go version.go
+	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go doc.go version.go
