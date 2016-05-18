@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	dplmt "github.com/mredivo/pulldeploy/deployment"
+	"github.com/mredivo/pulldeploy/deployment"
 	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/storage"
 )
@@ -98,7 +98,7 @@ func (cmd *Upload) Exec() *ErrorList {
 
 			// Calculate the artifact HMAC and write that to the repo.
 			if fh, err := os.Open(cmd.filename); err == nil {
-				signature := dplmt.CalculateHMAC(fh, dplmt.NewHMACCalculator(appCfg.Secret))
+				signature := deployment.CalculateHMAC(fh, deployment.NewHMACCalculator(appCfg.Secret))
 				sigPath := ri.SignaturePath(repoFilename)
 				if err := stg.Put(sigPath, signature); err != nil {
 					cmd.el.Append(err)
