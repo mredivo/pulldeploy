@@ -17,37 +17,36 @@ func TestDeploymentOperations(t *testing.T) {
 
 	os.RemoveAll("../data/client/" + TESTAPP)
 
-	dep := new(Deployment)
-
 	// Test the failure modes.
-	if err := dep.Init(TESTAPP, secret, "tar.gz", "", 0, 0); err == nil {
+	if _, err := New(TESTAPP, secret, "tar.gz", "", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init("", secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
+	if _, err := New("", secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing base dir")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, secret, "tar.gz", "/", 0, 0); err == nil {
+	if _, err := New(TESTAPP, secret, "tar.gz", "/", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with root dir \"/\"")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, secret, "tar.gz", "/foo", 0, 0); err == nil {
+	if _, err := New(TESTAPP, secret, "tar.gz", "/foo", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with root path too short")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if err := dep.Init(TESTAPP, secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
+	if _, err := New(TESTAPP, secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
 		t.Errorf("Deployment initialization succeeded with bad root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Create a Deployment for further testing.
-	if err := dep.Init(TESTAPP, secret, "tar.gz", "../data/client", 1001, 1001); err != nil {
+	dep, err := New(TESTAPP, secret, "tar.gz", "../data/client", 1001, 1001)
+	if err != nil {
 		t.Errorf("Deployment initialization failed: %s", err.Error())
 	}
 

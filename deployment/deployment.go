@@ -1,4 +1,27 @@
-// Package deployment provides methods for managing application deployment and release files.
+/*
+Package deployment provides methods for managing application deployment and release files.
+
+A deployment resides on the server running PullDeploy in daemon mode. It has the following
+directory structure:
+
+	/BASEDIR/APPNAME/.artifact
+	/BASEDIR/APPNAME/current  (a symlink)
+	/BASEDIR/APPNAME/release
+
+Artifacts retrieved from the repository are placed into the ".artifact" directory:
+
+	/BASEDIR/APPNAME/.artifact/APPNAME-VERSION.ARTIFACTTYPE
+
+Deployed releases are unpacked into a directory named for the version, under the
+"release" directory.
+
+	/BASEDIR/APPNAME/release/VERSION1
+	/BASEDIR/APPNAME/release/VERSION2
+	/BASEDIR/APPNAME/release/VERSION3
+
+Releasing a version points the "current" symlink to the specified release directory.
+
+*/
 package deployment
 
 import (
@@ -30,9 +53,25 @@ type Deployment struct {
 	releaseDir  string // The derived subdirectory for extracted build artifacts
 }
 
-// Initialize the local deployment object.
-// Currently supports "tar.gz" as an artifact type.
-func (d *Deployment) Init(appName, secret, artifactType, baseDir string, uid, gid int) error {
+/*
+New returns a new Deployment.
+
+Parameters:
+
+	* appName       The name of the application being deployed
+	* secret        The secret used to generate the artifact's HMAC
+	* artifactType  The artifact file type, expressed as an extension
+	* baseDir       The full path to the directory where the application is installed
+	* uid           The UID of the user who should own all application files
+	* gid           The GID of the user who should own all application files
+
+Currently supported artifact types:
+
+	* "tar.gz"
+*/
+func New(appName, secret, artifactType, baseDir string, uid, gid int) (*Deployment, error) {
+
+	d := new(Deployment)
 
 	// Capture the supplied arguments.
 	d.appName = appName
@@ -43,42 +82,42 @@ func (d *Deployment) Init(appName, secret, artifactType, baseDir string, uid, gi
 
 	// All string arguments are mandatory.
 	if appName == "" {
-		return errors.New("Deployment initialization error: appName is mandatory")
+		return nil, errors.New("Deployment initialization error: appName is mandatory")
 	}
 	switch d.suffix {
 	case "tar.gz":
 		// This is the only filetype currently supported.
 	case "":
-		return errors.New("Deployment initialization error: artifactType is mandatory")
+		return nil, errors.New("Deployment initialization error: artifactType is mandatory")
 	default:
-		return errors.New("Deployment initialization error: invalid artifactType")
+		return nil, errors.New("Deployment initialization error: invalid artifactType")
 	}
 	if baseDir == "" {
-		return errors.New("Deployment initialization error: baseDir is mandatory")
+		return nil, errors.New("Deployment initialization error: baseDir is mandatory")
 	}
 
 	// The root dir must not be "/".
 	rp := absPath(baseDir)
 	if rp == "/" {
-		return errors.New("Deployment initialization error: \"/\" not permitted as baseDir")
+		return nil, errors.New("Deployment initialization error: \"/\" not permitted as baseDir")
 	}
 
 	// The root dir path must be at least 2 elements ("/foo" has 2: ["", "foo"]).
 	// TODO: put minimum path length into configuration.
 	if dirs := strings.Split(rp, "/"); len(dirs) < 3 {
-		return errors.New("Deployment initialization error: baseDir must be at least 2 levels deep")
+		return nil, errors.New("Deployment initialization error: baseDir must be at least 2 levels deep")
 	}
 
 	// The root dir must exist.
 	if _, err := os.Stat(rp); err != nil {
-		return fmt.Errorf("Deployment initialization error: unable to stat baseDir: %s", err.Error())
+		return nil, fmt.Errorf("Deployment initialization error: unable to stat baseDir: %s", err.Error())
 	}
 
 	// If the base dir doesn't exist, create it.
 	d.baseDir = path.Join(rp, appName)
 	if _, err := os.Stat(d.baseDir); err != nil {
 		if err := makeDir(d.baseDir, d.uid, d.gid, 0755); err != nil {
-			return fmt.Errorf("Deployment initialization error: %s", err.Error())
+			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
 		}
 	}
 
@@ -86,7 +125,7 @@ func (d *Deployment) Init(appName, secret, artifactType, baseDir string, uid, gi
 	d.artifactDir = path.Join(d.baseDir, kARTIFACTDIR)
 	if _, err := os.Stat(d.artifactDir); err != nil {
 		if err := makeDir(d.artifactDir, d.uid, d.gid, 0755); err != nil {
-			return fmt.Errorf("Deployment initialization error: %s", err.Error())
+			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
 		}
 	}
 
@@ -94,11 +133,11 @@ func (d *Deployment) Init(appName, secret, artifactType, baseDir string, uid, gi
 	d.releaseDir = path.Join(d.baseDir, kRELEASEDIR)
 	if _, err := os.Stat(d.releaseDir); err != nil {
 		if err := makeDir(d.releaseDir, d.uid, d.gid, 0755); err != nil {
-			return fmt.Errorf("Deployment initialization error: %s", err.Error())
+			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
 		}
 	}
 
-	return nil
+	return d, nil
 }
 
 // Write creates a file in the artifact area from the given stream.
