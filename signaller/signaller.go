@@ -1,8 +1,12 @@
-// Package signaller provides notifications to running PullDeploy daemons.
+/*
+Package signaller sends notifications to running PullDeploy daemons.
+
+The signaller is intended to use Zookeeper for synchronization. If Zookeeper
+is not available, a timer is used as a fallback to drive polling.
+*/
 package signaller
 
 import (
-	"sort"
 	"sync"
 	"time"
 
@@ -23,8 +27,8 @@ type Signaller struct {
 	watches   map[string]interface{}   // A lookup table of all the watched paths
 }
 
-// NewCient returns a new Signaller.
-func NewClient(cfg *pdconfig.SignallerConfig) *Signaller {
+// New returns a new Signaller.
+func New(cfg *pdconfig.SignallerConfig) *Signaller {
 
 	// Create object, apply arguments.
 	sgnlr := &Signaller{}
@@ -39,7 +43,7 @@ func NewClient(cfg *pdconfig.SignallerConfig) *Signaller {
 	return sgnlr
 }
 
-// Open allocates the resources needed for generating notifications.
+// Open allocates the resources needed for sending and receiving notifications.
 func (sgnlr *Signaller) Open() <-chan Notification {
 
 	// No locking: handled separately in each called method.
@@ -58,7 +62,7 @@ func (sgnlr *Signaller) Open() <-chan Notification {
 	return sgnlr.appChange
 }
 
-// Close deallocates resources allocated by Open.
+// Close deallocates the resources allocated by Open.
 func (sgnlr *Signaller) Close() {
 
 	sgnlr.self.Lock()
@@ -76,7 +80,7 @@ func (sgnlr *Signaller) Close() {
 	sgnlr.zkConn = nil
 }
 
-// Monitor watches for changes in the given environment and application.
+// Monitor is used to ask for notifications for the given environment and application.
 func (sgnlr *Signaller) Monitor(envName, appName string) {
 
 	sgnlr.self.RLock()
@@ -125,43 +129,8 @@ func (sgnlr *Signaller) Notify(envName, appName string, data []byte) {
 	}
 }
 
-// Register enters the name of the local machine into the hosts registry,
-// along with the currently released version (requires Zookeeper).
-func (sgnlr *Signaller) Register(envName, appName, hostName, version string) {
-	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
-		flags := int32(zk.FlagEphemeral)
-		acl := zk.WorldACL(zk.PermAll)
-		registryPath := sgnlr.makeRegistryPath(envName, appName, hostName)
-		sgnlr.makeParentNodes(registryPath)
-		zkConn.Create(registryPath, []byte(version), flags, acl)
-	}
-}
-
-// Unregister removes the name of the local machine from the hosts registry
-// (requires Zookeeper).
-func (sgnlr *Signaller) Unregister(envName, appName, hostName string) {
-	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
-		registryPath := sgnlr.makeRegistryPath(envName, appName, hostName)
-		zkConn.Delete(registryPath, -1)
-	}
-}
-
-// GetRegistry retrieves the information in the hosts registry for the given
-// environment and application (requires Zookeeper).
-func (sgnlr *Signaller) GetRegistry(envName, appName string) []RegistryInfo {
-
-	var ri registryList = make(registryList, 0)
-
-	if zkConn := sgnlr.getZKConnWithLock(); zkConn != nil {
-		registryPath := sgnlr.makeRegistryPath(envName, appName, "")
-		data := make([]byte, 100)
-		hosts, _, _ := zkConn.Children(registryPath)
-		for _, host := range hosts {
-			data, _, _ = zkConn.Get(registryPath + "/" + host)
-			ri = append(ri, RegistryInfo{host, string(data)})
-		}
-	}
-	sort.Sort(ri)
-
-	return ri
+// GetRegistry retrieves an instance of the hosts registry.
+func (sgnlr *Signaller) GetRegistry() *Registry {
+	var hr *Registry = &Registry{sgnlr}
+	return hr
 }

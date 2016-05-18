@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// NotifySource indicate what mechanism triggered the event.
+// NotifySource indicates what mechanism triggered the event.
 type NotifySource int
 
 // String provides a printable representation of a NotifySource.
@@ -24,6 +24,7 @@ const (
 	KNS_ZK                        // Event was triggered by Zookeeper
 )
 
+// Notifications are obtained from the channel returned by Open().
 type Notification struct {
 	Source  NotifySource // The mechanism that caused the event
 	Appname string       // The name of the application that caused the event

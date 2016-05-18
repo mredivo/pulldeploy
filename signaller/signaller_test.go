@@ -18,7 +18,7 @@ func TestSignaller(t *testing.T) {
 func withZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(&pdconfig.SignallerConfig{
+	sgnlr := New(&pdconfig.SignallerConfig{
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
@@ -32,7 +32,7 @@ func withZookeeper(t *testing.T) {
 func withoutZookeeper(t *testing.T) {
 
 	// Instantiate and open the Signaller.
-	sgnlr := NewClient(&pdconfig.SignallerConfig{
+	sgnlr := New(&pdconfig.SignallerConfig{
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{}, ""},
@@ -86,12 +86,13 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 	sgnlr.Notify("prod", "myapp", []byte("My, what big teeth you have, granny!"))
 
 	// Exercise the registry.
-	sgnlr.Register("prod", "myapp", "clienthost-1", "1.1.1")
-	sgnlr.Register("prod", "myapp", "clienthost-2", "1.1.1")
-	sgnlr.Register("prod", "myapp", "clienthost-3", "1.1.1")
-	dumpRegistryInfo(sgnlr.GetRegistry("prod", "myapp"))
-	sgnlr.Unregister("prod", "myapp", "clienthost-2")
-	dumpRegistryInfo(sgnlr.GetRegistry("prod", "myapp"))
+	hr := sgnlr.GetRegistry()
+	hr.Register("prod", "myapp", "clienthost-1", "1.1.1")
+	hr.Register("prod", "myapp", "clienthost-2", "1.1.1")
+	hr.Register("prod", "myapp", "clienthost-3", "1.1.1")
+	dumpRegistryInfo(hr.Hosts("prod", "myapp"))
+	hr.Unregister("prod", "myapp", "clienthost-2")
+	dumpRegistryInfo(hr.Hosts("prod", "myapp"))
 
 	// Block until all messages arrive, or there's a timeout.
 	unittestWG.Wait()
@@ -117,6 +118,6 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 func dumpRegistryInfo(ri []RegistryInfo) {
 	fmt.Printf("Registry contents: %v\n", ri)
 	for _, v := range ri {
-		fmt.Printf("   Host: %s Version: %s\n", v.Hostname, v.AppVersion)
+		fmt.Printf("   Host: %q Env: %q App: %q Version: %q\n", v.Hostname, v.Envname, v.Appname, v.AppVersion)
 	}
 }
