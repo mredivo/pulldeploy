@@ -1,5 +1,6 @@
 /*
-A release manager for single-artifact deploys.
+Pulldeploy manages a repository of single-artifact application deployment packages, and
+deploys and releases those packages on their target hosts.
 
 usage: pulldeploy <command> [<args>]
 
