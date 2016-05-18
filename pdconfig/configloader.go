@@ -1,4 +1,3 @@
-// Package pdconfig loads and manages all application configuration.
 package pdconfig
 
 import (
