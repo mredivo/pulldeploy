@@ -3,6 +3,10 @@
 Pulldeploy manages a repository of single-artifact application deployment packages, and
 deploys and releases those packages on their target hosts.
  
+## Documentation
+
+https://godoc.org/github.com/mredivo/pulldeploy
+
 ## Status
 
 Nearly complete, but not operational yet.
