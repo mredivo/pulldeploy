@@ -1,4 +1,4 @@
-// Package repo defines the objects stored in the repository.
+// Package repo defines the Pulldeploy repository metadata.
 package repo
 
 import (
