@@ -73,3 +73,20 @@ func setRepoIndex(stg storage.Storage, ri *repo.RepoIndex) error {
 func placeHolder(format string, a ...interface{}) {
 	fmt.Printf("NOTIMPLEMENTED: "+format, a...)
 }
+
+func subtractArray(minuend, subtrahend []string) []string {
+	var difference []string = []string{}
+	for _, s1 := range minuend {
+		found := false
+		for _, s2 := range subtrahend {
+			if s1 == s2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			difference = append(difference, s1)
+		}
+	}
+	return difference
+}
