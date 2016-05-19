@@ -106,19 +106,23 @@ func loadAppList(configDir string) (map[string]*AppConfig, []error) {
 }
 
 // LoadPulldeployConfig loads the main configuration file and all the client apps.
-func LoadPulldeployConfig() (PDConfig, []error) {
+func LoadPulldeployConfig(configDir string) (PDConfig, []error) {
 
 	var errs []error = make([]error, 0)
 	var pdcfg *pdConfig = new(pdConfig)
 
 	// Determine which configuration directory to use.
-	if configDir, err := findConfigDir(); err == nil {
+	if configDir != "" {
 		pdcfg.configDir = configDir
-		pdcfg.configFile = path.Join(configDir, kCONFIG_FILENAME)
 	} else {
-		errs = append(errs, err)
-		return nil, errs
+		if configDir, err := findConfigDir(); err == nil {
+			pdcfg.configDir = configDir
+		} else {
+			errs = append(errs, err)
+			return nil, errs
+		}
 	}
+	pdcfg.configFile = path.Join(pdcfg.configDir, kCONFIG_FILENAME)
 
 	// Read in the YAML and decode it.
 	text, err := ioutil.ReadFile(pdcfg.configFile)

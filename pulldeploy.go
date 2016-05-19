@@ -19,7 +19,7 @@ func main() {
 	// Load the configuration.
 	var pdcfg pdconfig.PDConfig
 	var errs []error
-	if pdcfg, errs = pdconfig.LoadPulldeployConfig(); pdcfg == nil {
+	if pdcfg, errs = pdconfig.LoadPulldeployConfig(""); pdcfg == nil {
 		// Not loading a configuration in pdcfg is fatal.
 		for _, err := range errs {
 			fmt.Println(err.Error())
