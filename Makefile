@@ -36,7 +36,7 @@ devclean: clean
 	rm -f data/etc/$(TARGET).yaml
 	rm -rf data/etc/pulldeploy.d/*
 
-devenv: $(VERSIONINFO) data/etc/$(TARGET).yaml
+devenv: $(VERSIONINFO) data/etc/$(TARGET).yaml data/etc/pulldeploy.d/sample_app.json
 
 fetch:
 	go get -t -d -v ./...
@@ -48,12 +48,11 @@ $(VERSIONINFO): VERSION make_versioninfo.sh $(SOURCES)
 	@echo "Generating $(VERSIONINFO) with version \"$(VERSION)\""
 	$(shell ./make_versioninfo.sh $(VERSION) > $(VERSIONINFO))
 
-data/etc/$(TARGET).yaml: yaml/prototype.yaml
-ifdef CIRCLECI
-	sed -e "s/USERNAME/circleci/" -e "s#PROJECTDIR#$(PWD)#" < yaml/prototype.yaml > data/etc/$(TARGET).yaml
-else
-	sed -e "s/USERNAME/$(USER)/" -e "s#PROJECTDIR#$(PWD)#" < yaml/prototype.yaml > data/etc/$(TARGET).yaml
-endif
+data/etc/$(TARGET).yaml: data/configs/$(TARGET).yaml
+	sed -e "s#PROJECTDIR#$(PWD)#" < data/configs/$(TARGET).yaml > data/etc/$(TARGET).yaml
+
+data/etc/pulldeploy.d/sample_app.json: data/configs/sample_app.json
+	sed -e "s#PROJECTDIR#$(PWD)#" < data/configs/sample_app.json > data/etc/pulldeploy.d/sample_app.json
 
 build: $(BUILDDIR)/$(TARGET)
 

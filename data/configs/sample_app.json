@@ -1,0 +1,12 @@
+{
+    "description": "Sample Application",
+    "secret": "2fe52f3a6b4cff75495c8b1575d6d274",
+    "artifacttype": "tar.gz",
+    "directory": "PROJECTDIR/data/client",
+    "user": "0",
+    "group": "0",
+    "scripts": {
+        "postdeploy": [ "touch", "helloworld.txt" ],
+        "postrelease": [ "/Users/mredivo/bin/elasticsearch", "status" ]
+    }
+}
