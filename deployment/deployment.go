@@ -39,7 +39,7 @@ import (
 const kARTIFACTDIR = ".artifact"
 const kRELEASEDIR = "release"
 const kCURRENTDIR = "current"
-const kHMACSUFFIX = ".hmac"
+const kHMACSUFFIX = "hmac"
 
 // Deployment provides methods for manipulating local deployment files.
 type Deployment struct {
@@ -140,6 +140,14 @@ func New(appName, secret, artifactType, baseDir string, uid, gid int) (*Deployme
 	return d, nil
 }
 
+// ArtifactPresent indicates whether the artifact has already been written.
+func (d *Deployment) ArtifactPresent(version string) bool {
+
+	// Generate the filename, and check whether file already exists.
+	_, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	return exists
+}
+
 // Write creates a file in the artifact area from the given stream.
 func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 
@@ -166,12 +174,19 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	return nil
 }
 
+// HMACPresent indicates whether the HMAC has already been written.
+func (d *Deployment) HMACPresent(version string) bool {
+
+	// Generate the filename, and check whether file already exists.
+	_, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
+	return exists
+}
+
 // WriteHMAC writes an HMAC into the artifact area.
 func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 
 	// Generate the filename, write to file, set ownership.
-	hmacPath, _ := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
-	hmacPath += kHMACSUFFIX
+	hmacPath, _ := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
 	if err := ioutil.WriteFile(hmacPath, hmac, 0664); err != nil {
 		return fmt.Errorf("Error while writing %q: %s", hmacPath, err.Error())
 	}
@@ -191,7 +206,10 @@ func (d *Deployment) CheckHMAC(version string) error {
 	if !exists {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
-	hmacPath := artifactPath + kHMACSUFFIX
+	hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
+	if !exists {
+		return fmt.Errorf("HMAC does not exist: %s", artifactPath)
+	}
 
 	// Read in the HMAC.
 	if expectedMAC, err := ioutil.ReadFile(hmacPath); err == nil {
@@ -272,10 +290,12 @@ func (d *Deployment) Remove(version string) error {
 		return fmt.Errorf("Removing current version not permitted: %q", version)
 	}
 
-	// Remove the artifact.
+	// Remove the artifact and HMAC.
 	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix); exists {
 		os.Remove(artifactPath)
-		os.Remove(artifactPath + kHMACSUFFIX)
+	}
+	if hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix); exists {
+		os.Remove(hmacPath)
 	}
 
 	// Remove the extracted files.

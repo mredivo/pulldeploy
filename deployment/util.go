@@ -73,6 +73,17 @@ func makeArtifactPath(dir, name, version, suffix string) (string, bool) {
 	}
 }
 
+// Utility helper to generate an HMAC filename and path.
+func makeHMACPath(dir, name, version, suffix string) (string, bool) {
+	filename := fmt.Sprintf("%s-%s.%s.%s", name, version, suffix, kHMACSUFFIX)
+	filepath := path.Join(dir, filename)
+	if _, err := os.Stat(filepath); err == nil {
+		return filepath, true
+	} else {
+		return filepath, false
+	}
+}
+
 // Utility helper to generate a release dirname and path.
 func makeReleasePath(dir, version string) (string, bool) {
 	filepath := path.Join(dir, version)
