@@ -10,6 +10,8 @@ type NotifySource int
 // String provides a printable representation of a NotifySource.
 func (ns NotifySource) String() string {
 	switch ns {
+	case KNS_FORCED:
+		return "forced"
 	case KNS_TIMER:
 		return "timer"
 	case KNS_ZK:
@@ -20,8 +22,9 @@ func (ns NotifySource) String() string {
 }
 
 const (
-	KNS_TIMER NotifySource = iota // Event was triggered by a timer
-	KNS_ZK                        // Event was triggered by Zookeeper
+	KNS_FORCED NotifySource = iota // Event was created externally to signaller
+	KNS_TIMER                      // Event was triggered by a timer
+	KNS_ZK                         // Event was triggered by Zookeeper
 )
 
 // Notifications are obtained from the channel returned by Open().
