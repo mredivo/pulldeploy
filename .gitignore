@@ -12,3 +12,4 @@ data/repository/*
 /build/
 /pdconfig/versioninfo.go
 /data/etc/pulldeploy.yaml
+/data/etc/pulldeploy.d/*
