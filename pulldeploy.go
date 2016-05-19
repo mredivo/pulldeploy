@@ -43,7 +43,7 @@ func main() {
 			fmt.Println(usageLong)
 		}
 	case "version", "-v", "-version", "--version":
-		fmt.Println(versionInfo.OneLine())
+		fmt.Println(pdcfg.GetVersionInfo().OneLine())
 	case "initrepo":
 		cmd = new(command.Initrepo)
 	case "set":

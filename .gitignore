@@ -10,5 +10,5 @@ data/repository/*
 
 # Generated artifacts
 /build/
-/version.go
+/pdconfig/versioninfo.go
 /data/etc/pulldeploy.yaml

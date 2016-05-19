@@ -37,11 +37,17 @@ type AppConfig struct {
 
 // The definition of the configuration object shared throughout PullDeploy.
 type PDConfig interface {
+	GetVersionInfo() *VersionInfo
 	GetSignallerConfig() *SignallerConfig
 	GetStorageConfig() *StorageConfig
 	GetAppConfig(appName string) (*AppConfig, error)
 	GetAppList() map[string]*AppConfig
 	RefreshAppList() []error
+}
+
+// GetVersionInfo returns the object containing bakedin version information.
+func (pdcfg *pdConfig) GetVersionInfo() *VersionInfo {
+	return &versionInfo
 }
 
 // GetSignallerConfig returns the polling and Zookeeper information.

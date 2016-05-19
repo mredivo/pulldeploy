@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cat <<EOF
-package main
+package pdconfig
 
 import "fmt"
 

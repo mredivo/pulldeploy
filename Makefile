@@ -4,6 +4,7 @@ TARGET = pulldeploy
 
 BUILDDIR = build
 
+VERSIONINFO = pdconfig/versioninfo.go
 SRCLIBS = ./pdconfig/*go ./deployment/*go ./storage/*go ./repo/*go ./signaller/*go ./command/*go
 SOURCES = $(TARGET).go $(SRCLIBS)
 TESTS = ./pdconfig ./deployment ./storage ./repo ./signaller
@@ -25,21 +26,21 @@ clean:
 	rm -rf data/repository/*
 
 devclean: clean
-	rm -f version.go
+	rm -f $(VERSIONINFO)
 	rm -f data/etc/$(TARGET).yaml
 	rm -rf data/etc/pulldeploy.d/*
 
-devenv: version.go data/etc/$(TARGET).yaml
+devenv: $(VERSIONINFO) data/etc/$(TARGET).yaml
 
 fetch:
 	go get -t -d -v ./...
 
-test: version.go data/etc/$(TARGET).yaml
+test: $(VERSIONINFO) data/etc/$(TARGET).yaml
 	go test -race $(TESTS)
 
-version.go: VERSION version.go.template.sh $(SOURCES)
-	@echo "Generating version.go with version \"$(VERSION)\""
-	$(shell ./version.go.template.sh $(VERSION) > version.go)
+$(VERSIONINFO): VERSION make_versioninfo.sh $(SOURCES)
+	@echo "Generating $(VERSIONINFO) with version \"$(VERSION)\""
+	$(shell ./make_versioninfo.sh $(VERSION) > $(VERSIONINFO))
 
 data/etc/$(TARGET).yaml: yaml/prototype.yaml
 ifdef CIRCLECI
@@ -50,5 +51,5 @@ endif
 
 build: $(BUILDDIR)/$(TARGET)
 
-$(BUILDDIR)/$(TARGET): $(SOURCES) doc.go version.go
-	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go doc.go version.go
+$(BUILDDIR)/$(TARGET): $(SOURCES) doc.go $(VERSIONINFO)
+	go build -o $(BUILDDIR)/$(TARGET) $(TARGET).go doc.go
