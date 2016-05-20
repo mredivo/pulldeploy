@@ -47,9 +47,13 @@ func makeDir(name string, uid, gid int, perm os.FileMode) error {
 func setOwner(name string, uid, gid int) error {
 
 	// We must be root, and we don't change ownership to root.
-	if os.Geteuid() == 0 && uid != 0 && gid != 0 {
-		if err := os.Chown(name, uid, gid); err != nil {
-			return fmt.Errorf("unable to set owner: %s", err.Error())
+	if os.Geteuid() == 0 {
+		if uid != 0 && gid != 0 {
+			if err := os.Chown(name, uid, gid); err != nil {
+				return fmt.Errorf("unable to set owner: %s", err.Error())
+			}
+		} else {
+			return fmt.Errorf("refusing to set owner to %d:%d: %s", uid, gid, name)
 		}
 	}
 
@@ -60,19 +64,23 @@ func setOwner(name string, uid, gid int) error {
 func setOwnerAll(dir string, uid, gid int) error {
 
 	// We must be root, and we don't change ownership to root.
-	if os.Geteuid() == 0 && uid != 0 && gid != 0 {
+	if os.Geteuid() == 0 {
+		if uid != 0 && gid != 0 {
 
-		// Visitor to do the actual work.
-		var setOwnerFunc = func(path string, info os.FileInfo, err error) error {
-			if err == nil {
-				if err := os.Chown(path, uid, gid); err != nil {
-					//fmt.Printf("unable to change owner to %d:%d: %s", uid, gid, path)
+			// Visitor to do the actual work.
+			var setOwnerFunc = func(path string, info os.FileInfo, err error) error {
+				if err == nil {
+					if err := os.Chown(path, uid, gid); err != nil {
+						//fmt.Printf("unable to change owner to %d:%d: %s", uid, gid, path)
+					}
 				}
+				return nil
 			}
-			return nil
-		}
 
-		filepath.Walk(dir, setOwnerFunc)
+			filepath.Walk(dir, setOwnerFunc)
+		} else {
+			return fmt.Errorf("refusing to set owner to %d:%d: %s", uid, gid, dir)
+		}
 	}
 
 	return nil

@@ -32,7 +32,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
@@ -96,9 +98,17 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 		return nil, fmt.Errorf("Deployment initialization error: unable to stat BaseDir: %s", err.Error())
 	}
 
-	// TODO: Derive the UID/GID from the username/groupname
-	d.uid = 0
-	d.gid = 0
+	// Derive the UID/GID from the username/groupname
+	// NOTE: Go doesn't yet support looking up a GID from a name, so
+	//       we use the gid from the user.
+	if user, err := user.Lookup(d.cfg.User); err == nil {
+		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
+			d.uid = int(i)
+		}
+		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
+			d.gid = int(i)
+		}
+	}
 
 	// If the base dir doesn't exist, create it.
 	d.baseDir = path.Join(rp, appName)
@@ -240,6 +250,7 @@ func (d *Deployment) Extract(version string) error {
 	}
 
 	// Extract the archive into the version directory.
+	// TODO: Move the /bin/tar command to the configuration
 	tarcmd := "/bin/tar" // Linux
 	if _, err := os.Stat(tarcmd); os.IsNotExist(err) {
 		tarcmd = "/usr/bin/tar" // Mac
