@@ -150,7 +150,7 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 	}
 
 	// Instantiate the deployment object for this application.
-	dplmt, err := deployment.New(an.Appname, appCfg.Secret, appCfg.ArtifactType, appCfg.Directory, 0, 0)
+	dplmt, err := deployment.New(an.Appname, appCfg)
 	if err != nil {
 		cmd.lw.Error("Error in deployment for %q: %s", an.Appname, err.Error())
 		return

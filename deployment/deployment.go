@@ -34,6 +34,8 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 const kARTIFACTDIR = ".artifact"
@@ -43,75 +45,60 @@ const kHMACSUFFIX = "hmac"
 
 // Deployment provides methods for manipulating local deployment files.
 type Deployment struct {
-	appName     string // The name of the application
-	secret      string // The secret used to sign artifacts
-	suffix      string // The artifact type, expressed as a file suffix
-	uid         int    // The UID to own all files for this deployment
-	gid         int    // The GID to own all files for this deployment
-	baseDir     string // The derived top-level directory for this app's files
-	artifactDir string // The derived subdirectory for fetched build artifacts
-	releaseDir  string // The derived subdirectory for extracted build artifacts
+	appName     string             // The name of the application
+	cfg         pdconfig.AppConfig // The deployment configuration
+	uid         int                // The numeric UID to own all files for this deployment
+	gid         int                // The numeric GID to own all files for this deployment
+	baseDir     string             // The derived top-level directory for this app's files
+	artifactDir string             // The derived subdirectory for fetched build artifacts
+	releaseDir  string             // The derived subdirectory for extracted build artifacts
 }
 
-/*
-New returns a new Deployment.
-
-Parameters:
-
-	* appName       The name of the application being deployed
-	* secret        The secret used to generate the artifact's HMAC
-	* artifactType  The artifact file type, expressed as an extension
-	* baseDir       The full path to the directory where the application is installed
-	* uid           The UID of the user who should own all application files
-	* gid           The GID of the user who should own all application files
-
-Currently supported artifact types:
-
-	* "tar.gz"
-*/
-func New(appName, secret, artifactType, baseDir string, uid, gid int) (*Deployment, error) {
+// New returns a new Deployment.
+func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 
 	d := new(Deployment)
+	d.cfg = *cfg
 
 	// Capture the supplied arguments.
 	d.appName = appName
-	d.secret = secret
-	d.suffix = artifactType
-	d.uid = uid
-	d.gid = gid
 
 	// All string arguments are mandatory.
 	if appName == "" {
-		return nil, errors.New("Deployment initialization error: appName is mandatory")
+		return nil, errors.New("Deployment initialization error: Appname is mandatory")
 	}
-	switch d.suffix {
+	switch d.cfg.ArtifactType {
 	case "tar.gz":
 		// This is the only filetype currently supported.
 	case "":
-		return nil, errors.New("Deployment initialization error: artifactType is mandatory")
+		return nil, errors.New("Deployment initialization error: ArtifactType is mandatory")
 	default:
-		return nil, errors.New("Deployment initialization error: invalid artifactType")
+		return nil, errors.New("Deployment initialization error: invalid ArtifactType")
 	}
-	if baseDir == "" {
-		return nil, errors.New("Deployment initialization error: baseDir is mandatory")
+	if d.cfg.BaseDir == "" {
+		return nil, errors.New("Deployment initialization error: BaseDir is mandatory")
 	}
 
 	// The root dir must not be "/".
-	rp := absPath(baseDir)
+	rp := absPath(d.cfg.BaseDir)
 	if rp == "/" {
-		return nil, errors.New("Deployment initialization error: \"/\" not permitted as baseDir")
+		return nil, errors.New("Deployment initialization error: \"/\" not permitted as BaseDir")
 	}
 
 	// The root dir path must be at least 2 elements ("/foo" has 2: ["", "foo"]).
 	// TODO: put minimum path length into configuration.
 	if dirs := strings.Split(rp, "/"); len(dirs) < 3 {
-		return nil, errors.New("Deployment initialization error: baseDir must be at least 2 levels deep")
+		return nil, errors.New("Deployment initialization error: BaseDir must be at least 2 levels deep")
 	}
 
 	// The root dir must exist.
 	if _, err := os.Stat(rp); err != nil {
-		return nil, fmt.Errorf("Deployment initialization error: unable to stat baseDir: %s", err.Error())
+		return nil, fmt.Errorf("Deployment initialization error: unable to stat BaseDir: %s", err.Error())
 	}
+
+	// TODO: Derive the UID/GID from the username/groupname
+	d.uid = 0
+	d.gid = 0
 
 	// If the base dir doesn't exist, create it.
 	d.baseDir = path.Join(rp, appName)
@@ -144,7 +131,7 @@ func New(appName, secret, artifactType, baseDir string, uid, gid int) (*Deployme
 func (d *Deployment) ArtifactPresent(version string) bool {
 
 	// Generate the filename, and check whether file already exists.
-	_, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	_, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	return exists
 }
 
@@ -155,7 +142,7 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	defer rc.Close()
 
 	// Generate the filename, and check whether file already exists.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	if exists {
 		return fmt.Errorf("Artifact already exists: %s", artifactPath)
 	}
@@ -178,7 +165,7 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 func (d *Deployment) HMACPresent(version string) bool {
 
 	// Generate the filename, and check whether file already exists.
-	_, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
+	_, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	return exists
 }
 
@@ -186,7 +173,7 @@ func (d *Deployment) HMACPresent(version string) bool {
 func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 
 	// Generate the filename, write to file, set ownership.
-	hmacPath, _ := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
+	hmacPath, _ := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	if err := ioutil.WriteFile(hmacPath, hmac, 0664); err != nil {
 		return fmt.Errorf("Error while writing %q: %s", hmacPath, err.Error())
 	}
@@ -202,11 +189,11 @@ func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 func (d *Deployment) CheckHMAC(version string) error {
 
 	// Build the filenames.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	if !exists {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
-	hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix)
+	hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	if !exists {
 		return fmt.Errorf("HMAC does not exist: %s", artifactPath)
 	}
@@ -216,7 +203,7 @@ func (d *Deployment) CheckHMAC(version string) error {
 
 		// Open the artifact, and calculate its HMAC.
 		if fp, err := os.Open(artifactPath); err == nil {
-			messageMAC := CalculateHMAC(fp, NewHMACCalculator(d.secret))
+			messageMAC := CalculateHMAC(fp, NewHMACCalculator(d.cfg.Secret))
 			if !hmac.Equal(messageMAC, expectedMAC) {
 				return fmt.Errorf(
 					"Artifact is corrupt: Expected HMAC: %q: Calculated HMAC: %q",
@@ -239,7 +226,7 @@ func (d *Deployment) CheckHMAC(version string) error {
 func (d *Deployment) Extract(version string) error {
 
 	// Ensure that the artifact to be extracted exists.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
 	if !exists {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
@@ -291,10 +278,10 @@ func (d *Deployment) Remove(version string) error {
 	}
 
 	// Remove the artifact and HMAC.
-	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.suffix); exists {
+	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType); exists {
 		os.Remove(artifactPath)
 	}
-	if hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.suffix); exists {
+	if hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType); exists {
 		os.Remove(hmacPath)
 	}
 

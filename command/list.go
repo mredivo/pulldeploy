@@ -46,7 +46,7 @@ func (cmd *List) Exec() *ErrorList {
 		appConfig := appList[appName]
 		fmt.Printf("    Description : %s\n", appConfig.Description)
 		fmt.Printf("    Secret      : %s\n", appConfig.Secret)
-		fmt.Printf("    Directory   : %s\n", appConfig.Directory)
+		fmt.Printf("    BaseDir     : %s\n", appConfig.BaseDir)
 		fmt.Printf("    User        : %s\n", appConfig.User)
 		fmt.Printf("    Group       : %s\n", appConfig.Group)
 	}

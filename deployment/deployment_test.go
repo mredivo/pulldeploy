@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
 func TestDeploymentOperations(t *testing.T) {
@@ -18,34 +20,44 @@ func TestDeploymentOperations(t *testing.T) {
 	os.RemoveAll("../data/client/" + TESTAPP)
 
 	// Test the failure modes.
-	if _, err := New(TESTAPP, secret, "tar.gz", "", 0, 0); err == nil {
+	appcfg := &pdconfig.AppConfig{"", secret, "tar.gz", "", "", ""}
+	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if _, err := New("", secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
-		t.Errorf("Deployment initialization succeeded with missing base dir")
+
+	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/nosuchdir", "", ""}
+	if _, err := New("", appcfg); err == nil {
+		t.Errorf("Deployment initialization succeeded with missing appname")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if _, err := New(TESTAPP, secret, "tar.gz", "/", 0, 0); err == nil {
+
+	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "/", "", ""}
+	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root dir \"/\"")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if _, err := New(TESTAPP, secret, "tar.gz", "/foo", 0, 0); err == nil {
+
+	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "/foo", "", ""}
+	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root path too short")
 	} else {
 		fmt.Println(err.Error())
 	}
-	if _, err := New(TESTAPP, secret, "tar.gz", "../data/nosuchdir", 0, 0); err == nil {
+
+	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/nosuchdir", "", ""}
+	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with bad root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Create a Deployment for further testing.
-	dep, err := New(TESTAPP, secret, "tar.gz", "../data/client", 1001, 1001)
+	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/client", "", ""}
+	dep, err := New(TESTAPP, appcfg)
 	if err != nil {
 		t.Errorf("Deployment initialization failed: %s", err.Error())
 	}
