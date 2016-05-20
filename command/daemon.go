@@ -226,6 +226,9 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 						an.Appname, cmd.envName, version)
 					continue
 				}
+
+				// Execute the post-deploy command.
+				cmd.logPostCommand(dplmt.PostDeploy(version))
 			}
 
 			// Determine the currently released version on the local host, and
@@ -236,6 +239,8 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 				if err := dplmt.Link(env.Current); err == nil {
 					cmd.lw.Info("Current release for %s in %s set to %q",
 						an.Appname, cmd.envName, env.Current)
+					// Execute the post-release command.
+					cmd.logPostCommand(dplmt.PostRelease(env.Current))
 				} else {
 					cmd.lw.Error("Error setting current release for %s in %s to %q: %s",
 						an.Appname, cmd.envName, env.Current, err.Error())
@@ -245,5 +250,25 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 
 	} else {
 		cmd.lw.Error("Error getting repo index for %q: %s", an.Appname, err.Error())
+	}
+}
+
+func (cmd *Daemon) logPostCommand(command, curdir, stdout, stderr string) {
+	if command != "" {
+		if stdout == "" {
+			if stderr == "" {
+				cmd.lw.Info("Executed %q in %s", command, curdir)
+			} else {
+				cmd.lw.Info("Executed %q in %s\nstderr=%q", command, curdir, stderr)
+				cmd.lw.Warn(stderr)
+			}
+		} else {
+			if stderr == "" {
+				cmd.lw.Info("Executed %q in %s\nstdout=%q", command, curdir, stdout)
+			} else {
+				cmd.lw.Info("Executed %q in %s\nstdout=%q\nstderr=%q", command, curdir, stdout, stderr)
+				cmd.lw.Warn(stderr)
+			}
+		}
 	}
 }

@@ -24,6 +24,11 @@ type StorageConfig struct {
 	Params map[string]string // Type-specific parameters
 }
 
+type postCommand struct {
+	Cmd  string
+	Args []string
+}
+
 // AppConfig contains the definition of each PullDeploy client application,
 // loaded from /etc/pulldeploy.d/<appname>.json
 type AppConfig struct {
@@ -33,6 +38,7 @@ type AppConfig struct {
 	BaseDir      string // The base directory of the deployment on the app server
 	User         string // The user that should own all deployed artifacts
 	Group        string // The group that should own all deployed artifacts
+	Scripts      map[string]postCommand
 }
 
 // The definition of the configuration object shared throughout PullDeploy.

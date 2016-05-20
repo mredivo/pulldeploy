@@ -269,6 +269,24 @@ func (d *Deployment) Link(version string) error {
 	return os.Symlink(versionDir, symlinkPath)
 }
 
+// PostDeploy executes the configured PostDeploy command.
+func (d *Deployment) PostDeploy(version string) (string, string, string, string) {
+	if d.cfg.Scripts["postdeploy"].Cmd != "" {
+		versionDir, _ := makeReleasePath(d.releaseDir, version)
+		return sysCommand(versionDir, d.cfg.Scripts["postdeploy"].Cmd, d.cfg.Scripts["postdeploy"].Args)
+	}
+	return "", "", "", ""
+}
+
+// PostRelease executes the configured PostRelease command.
+func (d *Deployment) PostRelease(version string) (string, string, string, string) {
+	if d.cfg.Scripts["postrelease"].Cmd != "" {
+		versionDir, _ := makeReleasePath(d.releaseDir, version)
+		return sysCommand(versionDir, d.cfg.Scripts["postrelease"].Cmd, d.cfg.Scripts["postrelease"].Args)
+	}
+	return "", "", "", ""
+}
+
 // Remove deletes everything associated with the given name.
 func (d *Deployment) Remove(version string) error {
 

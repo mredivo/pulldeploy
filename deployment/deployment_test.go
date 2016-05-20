@@ -20,35 +20,35 @@ func TestDeploymentOperations(t *testing.T) {
 	os.RemoveAll("../data/client/" + TESTAPP)
 
 	// Test the failure modes.
-	appcfg := &pdconfig.AppConfig{"", secret, "tar.gz", "", "", ""}
+	appcfg := &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz"}
 	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
 
-	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/nosuchdir", "", ""}
+	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/nosuchdir"}
 	if _, err := New("", appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing appname")
 	} else {
 		fmt.Println(err.Error())
 	}
 
-	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "/", "", ""}
+	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "/"}
 	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root dir \"/\"")
 	} else {
 		fmt.Println(err.Error())
 	}
 
-	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "/foo", "", ""}
+	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "/foo"}
 	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root path too short")
 	} else {
 		fmt.Println(err.Error())
 	}
 
-	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/nosuchdir", "", ""}
+	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/nosuchdir"}
 	if _, err := New(TESTAPP, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with bad root dir")
 	} else {
@@ -56,7 +56,7 @@ func TestDeploymentOperations(t *testing.T) {
 	}
 
 	// Create a Deployment for further testing.
-	appcfg = &pdconfig.AppConfig{"", secret, "tar.gz", "../data/client", "", ""}
+	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/client"}
 	dep, err := New(TESTAPP, appcfg)
 	if err != nil {
 		t.Errorf("Deployment initialization failed: %s", err.Error())

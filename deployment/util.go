@@ -1,10 +1,13 @@
 package deployment
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 // Utility helper to convert relative paths to absolute.
@@ -16,6 +19,19 @@ func absPath(candidate string) string {
 		}
 	}
 	return s
+}
+
+// Utility helper to execute a system command.
+func sysCommand(curDir string, command string, args []string) (string, string, string, string) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command(command, args...)
+	cmd.Dir = curDir
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.Run()
+	text := command + " " + strings.Join(args, " ")
+	return text, curDir, strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String())
 }
 
 // Utility helper to create a directory and set its owner.
