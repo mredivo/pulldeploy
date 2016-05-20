@@ -1,7 +1,6 @@
 package pdconfig
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,7 +14,7 @@ const kCONFIG_FILENAME = "pulldeploy.yaml" // The name of the main configuration
 const kCONFIG_DIR_DEV = "data/etc"         // Location of developer version of the config
 const kCONFIG_DIR_PROD = "/etc"            // Location of production version of the config
 const kCONFIG_APP_DIR = "pulldeploy.d"     // Subdirectory for application config files
-const kCONFIG_APP_EXT = ".json"            // Filename extension for application config files
+const kCONFIG_APP_EXT = ".yaml"            // Filename extension for application config files
 
 // The configuration as read in.
 type pdConfig struct {
@@ -68,11 +67,10 @@ func loadAppConfig(configDir, appName string) (*AppConfig, error) {
 	appcfg := new(AppConfig)
 	appcfgfile := path.Join(configDir, kCONFIG_APP_DIR, appName+kCONFIG_APP_EXT)
 
-	if f, err := os.Open(appcfgfile); err == nil {
-		defer f.Close()
-		decoder := json.NewDecoder(f)
-		if err := decoder.Decode(appcfg); err == nil {
-		} else {
+	// Read in the YAML and decode it.
+	text, err := ioutil.ReadFile(appcfgfile)
+	if err == nil {
+		if err = yaml.Unmarshal(text, &appcfg); err != nil {
 			return nil, err
 		}
 	} else {
@@ -91,7 +89,7 @@ func loadAppList(configDir string) (map[string]*AppConfig, []error) {
 	if files, err := ioutil.ReadDir(path.Join(configDir, kCONFIG_APP_DIR)); err == nil {
 		for _, file := range files {
 			filename := file.Name()
-			if path.Ext(filename) == ".json" {
+			if path.Ext(filename) == kCONFIG_APP_EXT {
 				appName := strings.TrimSuffix(filename, kCONFIG_APP_EXT)
 				if ac, err := loadAppConfig(configDir, appName); err == nil {
 					appList[appName] = ac

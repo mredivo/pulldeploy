@@ -36,7 +36,7 @@ devclean: clean
 	rm -f data/etc/$(TARGET).yaml
 	rm -rf data/etc/pulldeploy.d/*
 
-devenv: $(VERSIONINFO) data/etc/$(TARGET).yaml data/etc/pulldeploy.d/sample_app.json
+devenv: $(VERSIONINFO) data/etc/$(TARGET).yaml data/etc/pulldeploy.d/sample_app.yaml
 
 fetch:
 	go get -t -d -v ./...
@@ -51,8 +51,8 @@ $(VERSIONINFO): VERSION make_versioninfo.sh $(SOURCES)
 data/etc/$(TARGET).yaml: data/configs/$(TARGET).yaml
 	sed -e "s#PROJECTDIR#$(PWD)#" < data/configs/$(TARGET).yaml > data/etc/$(TARGET).yaml
 
-data/etc/pulldeploy.d/sample_app.json: data/configs/sample_app.json
-	sed -e "s#PROJECTDIR#$(PWD)#" < data/configs/sample_app.json > data/etc/pulldeploy.d/sample_app.json
+data/etc/pulldeploy.d/sample_app.yaml: data/configs/sample_app.yaml
+	sed -e "s#PROJECTDIR#$(PWD)#" < data/configs/sample_app.yaml > data/etc/pulldeploy.d/sample_app.yaml
 
 build: $(BUILDDIR)/$(TARGET)
 

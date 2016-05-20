@@ -1,0 +1,15 @@
+description: "Sample Application"
+secret: "2fe52f3a6b4cff75495c8b1575d6d274"
+artifacttype: "tar.gz"
+basedir: "PROJECTDIR/data/client"
+user: "0"
+group: "0"
+scripts:
+    postdeploy:
+        cmd: "touch"
+        args:
+            - "helloworld.txt"
+    postrelease:
+        cmd: "/Users/mredivo/bin/elasticsearch"
+        args:
+            - "status"

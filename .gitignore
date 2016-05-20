@@ -7,9 +7,9 @@
 # Test and development data
 data/client/*
 data/repository/*
+/data/etc/pulldeploy.yaml
+/data/etc/pulldeploy.d/*
 
 # Generated artifacts
 /build/
 /pdconfig/versioninfo.go
-/data/etc/pulldeploy.yaml
-/data/etc/pulldeploy.d/*
