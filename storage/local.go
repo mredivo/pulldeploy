@@ -15,7 +15,7 @@ Valid Params for KST_LOCAL:
 
 	* "basedir" The full path to the directory containing the repository
 */
-const KST_LOCAL StorageType = "local"
+const KST_LOCAL AccessMethod = "local"
 
 // stLocal is used for PullDeploy repositories on the local filesystem.
 type stLocal struct {
@@ -103,9 +103,8 @@ func makeLocalPath(baseDir, repoPath string) (string, bool) {
 	fullpath := path.Join(baseDir, repoPath)
 	if _, err := os.Stat(fullpath); err == nil {
 		return fullpath, true
-	} else {
-		return fullpath, false
 	}
+	return fullpath, false
 }
 
 // Utility helper to convert relative paths to absolute.

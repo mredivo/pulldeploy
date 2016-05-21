@@ -18,7 +18,7 @@ Valid Params for KST_S3:
 	* "bucket"      The name of the AWS bucket
 	* "prefix"      An optional prefix for the bucket contents, for example "pulldeploy"
 */
-const KST_S3 StorageType = "s3"
+const KST_S3 AccessMethod = "s3"
 
 // stS3 is used for PullDeploy repositories in Amazon S3.
 type stS3 struct {
@@ -109,7 +109,6 @@ func (st *stS3) PutReader(repoPath string, rc io.ReadCloser, length int64) error
 func (st *stS3) makeS3Path(repoPath string) string {
 	if st.pathPrefix == "" {
 		return repoPath
-	} else {
-		return path.Join(st.pathPrefix, repoPath)
 	}
+	return path.Join(st.pathPrefix, repoPath)
 }

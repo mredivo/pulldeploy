@@ -65,7 +65,7 @@ func (cmd *Daemon) Exec() *ErrorList {
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
-	if stg, err := storage.New(storage.StorageType(stgcfg.Type), stgcfg.Params); err == nil {
+	if stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params); err == nil {
 		cmd.stg = stg
 	} else {
 		cmd.el.Append(err)

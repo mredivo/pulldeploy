@@ -20,8 +20,8 @@ type SignallerConfig struct {
 
 // StorageConfig contains the repository storage location, and its instantiation parameters.
 type StorageConfig struct {
-	Type   string            // One of the KST_* StorageType constants
-	Params map[string]string // Type-specific parameters
+	AccessMethod string            // One of the KST_* AccessMethod constants
+	Params       map[string]string // Type-specific parameters
 }
 
 type postCommand struct {
@@ -68,8 +68,8 @@ func (pdcfg *pdConfig) GetSignallerConfig() *SignallerConfig {
 // GetStorageConfig returns the type and params for the configured storage.
 func (pdcfg *pdConfig) GetStorageConfig() *StorageConfig {
 	sc := new(StorageConfig)
-	sc.Type = pdcfg.StorageType
-	if params, found := pdcfg.Storage[pdcfg.StorageType]; found {
+	sc.AccessMethod = pdcfg.AccessMethod
+	if params, found := pdcfg.Storage[pdcfg.AccessMethod]; found {
 		sc.Params = params
 	} else {
 		sc.Params = make(map[string]string)

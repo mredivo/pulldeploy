@@ -18,27 +18,26 @@ type Storage interface {
 	PutReader(repoPath string, rc io.ReadCloser, length int64) error // Write a stream to a repository file
 }
 
-// StorageType indicates where the repository data should be stored.
-type StorageType string
+// AccessMethod indicates where the repository data should be stored.
+type AccessMethod string
 
-// String returns a printable representation of a StorageType.
-func (st StorageType) String() string {
-	return string(st)
+// String returns a printable representation of an AccessMethod.
+func (am AccessMethod) String() string {
+	return string(am)
 }
 
 // New returns an instance of Storage of the requested type.
-func New(st StorageType, params Params) (Storage, error) {
+func New(am AccessMethod, params Params) (Storage, error) {
 
-	//var st StorageType = StorageType(typestr)
 	var stg Storage
 
-	switch st {
+	switch am {
 	case KST_LOCAL:
 		stg = &stLocal{}
 	case KST_S3:
 		stg = &stS3{}
 	default:
-		return nil, fmt.Errorf("Invalid StorageType: %s", st.String())
+		return nil, fmt.Errorf("Invalid AccessMethod: %s", am.String())
 	}
 
 	if err := stg.init(params); err != nil {

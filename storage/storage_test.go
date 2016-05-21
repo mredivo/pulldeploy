@@ -9,7 +9,7 @@ import (
 )
 
 // TODO: Read doS3Tests from a configuration file
-var doS3Tests bool = true
+var doS3Tests = true
 
 const TESTAPP = "stubapp"
 
@@ -18,15 +18,15 @@ func TestStorage(t *testing.T) {
 	var rs Storage
 	var err error
 
-	// An invalid StorageType should fail.
+	// An invalid AccessMethod should fail.
 	params := make(map[string]string)
-	if _, err := New("nosuchstoragetype", params); err == nil {
-		t.Errorf("Storage creation succeeded with invalid storage type")
+	if _, err := New("nosuchaccessmethod", params); err == nil {
+		t.Errorf("Storage creation succeeded with invalid access method")
 	} else {
 		fmt.Println(err.Error())
 	}
 
-	// Exercise the Local storage type.
+	// Exercise the Local access method.
 	params = make(map[string]string)
 
 	// Test handling of initialization.
@@ -49,7 +49,7 @@ func TestStorage(t *testing.T) {
 	}
 	testStorage(t, KST_LOCAL, rs)
 
-	// Exercise the S3 storage type.
+	// Exercise the S3 access method.
 	params = make(map[string]string)
 
 	// Test handling of initialization.
@@ -77,14 +77,14 @@ func TestStorage(t *testing.T) {
 	}
 }
 
-func testStorage(t *testing.T, st StorageType, rs Storage) {
+func testStorage(t *testing.T, am AccessMethod, rs Storage) {
 
 	sampleBytes := []byte("This is sample repository data.\n")
 	sampleFilename1 := "/" + TESTAPP + "/method_a/sampledata.txt"
 	sampleFilename2 := "/" + TESTAPP + "/method_b/sampledata.txt"
 
 	// Clear out test data from previous runs.
-	switch st {
+	switch am {
 	case KST_LOCAL:
 		os.RemoveAll("../data/repository/" + TESTAPP)
 	case KST_S3:
@@ -95,29 +95,29 @@ func testStorage(t *testing.T, st StorageType, rs Storage) {
 
 	// Reading a nonexistent file should fail.
 	if _, err := rs.Get(sampleFilename1); err == nil {
-		t.Errorf("%s Get() should have failed for nonexistent file", st)
+		t.Errorf("%s Get() should have failed for nonexistent file", am)
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	// Write some data to the repo.
 	if err := rs.Put(sampleFilename1, sampleBytes); err != nil {
-		t.Errorf("%s Put() failed: %s", st, err.Error())
+		t.Errorf("%s Put() failed: %s", am, err.Error())
 	}
 
 	// Read back the data we wrote.
 	if data, err := rs.Get(sampleFilename1); err != nil {
-		t.Errorf("%s Get() failed %s", st, err.Error())
+		t.Errorf("%s Get() failed %s", am, err.Error())
 	} else {
 		if bytes.Compare(sampleBytes, data) != 0 {
 			t.Errorf("%s Get() error: expected %q, got %q",
-				st, string(sampleBytes), string(data))
+				am, string(sampleBytes), string(data))
 		}
 	}
 
 	// Reading a nonexistent file should fail.
 	if _, err := rs.GetReader(sampleFilename2); err == nil {
-		t.Errorf("%s GetReader() should have failed for nonexistent file", st)
+		t.Errorf("%s GetReader() should have failed for nonexistent file", am)
 	} else {
 		fmt.Println(err.Error())
 	}
@@ -128,19 +128,19 @@ func testStorage(t *testing.T, st StorageType, rs Storage) {
 		ioutil.NopCloser(bytes.NewReader(sampleBytes)),
 		int64(len(sampleBytes)),
 	); err != nil {
-		t.Errorf("%s PutReader() failed: %s", st, err.Error())
+		t.Errorf("%s PutReader() failed: %s", am, err.Error())
 	}
 
 	// Read back the data we wrote.
 	if rdr, err := rs.GetReader(sampleFilename2); err != nil {
-		t.Errorf("%s GetReader() failed %s", st, err.Error())
+		t.Errorf("%s GetReader() failed %s", am, err.Error())
 	} else {
 		data := make([]byte, len(sampleBytes)+16)
 		rdr.Read(data)
 		rdr.Close()
 		if bytes.Compare(sampleBytes, data[:len(sampleBytes)]) != 0 {
 			t.Errorf("%s Get() error: expected %q, got %q",
-				st, string(sampleBytes), string(data))
+				am, string(sampleBytes), string(data))
 		}
 	}
 }

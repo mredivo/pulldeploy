@@ -18,12 +18,12 @@ const kCONFIG_APP_EXT = ".yaml"            // Filename extension for application
 
 // The configuration as read in.
 type pdConfig struct {
-	configDir   string                // Invisible to YAML decoder, determined at runtime
-	configFile  string                // Invisible to YAML decoder, determined at runtime
-	appList     map[string]*AppConfig // Invisible to YAML decoder, loaded separately
-	StorageType string                // One of the KST_* StorageType constants
-	Storage     map[string]map[string]string
-	Signaller   SignallerConfig
+	configDir    string                // Invisible to YAML decoder, determined at runtime
+	configFile   string                // Invisible to YAML decoder, determined at runtime
+	appList      map[string]*AppConfig // Invisible to YAML decoder, loaded separately
+	AccessMethod string                // One of the KST_* AccessMethod constants
+	Storage      map[string]map[string]string
+	Signaller    SignallerConfig
 }
 
 // findConfigDir enables use of a developer-specific configuration directory.

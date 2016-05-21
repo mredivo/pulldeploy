@@ -1,6 +1,6 @@
 # PullDeploy Configuration file
 
-storagetype: "local"    # One of the KST_* StorageType constants
+accessmethod: "local"   # One of the KST_* AccessMethod constants
 
 storage:
     local:  # KST_LOCAL
