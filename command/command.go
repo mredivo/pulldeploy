@@ -44,8 +44,8 @@ func (el *ErrorList) Errors() []string {
 	return s
 }
 
-func getRepoIndex(stg storage.Storage, appName string) (*repo.RepoIndex, error) {
-	ri := repo.NewRepoIndex(appName)
+func getRepoIndex(stg storage.Storage, appName string) (*repo.Index, error) {
+	ri := repo.NewIndex(appName)
 	if text, err := stg.Get(ri.IndexPath()); err == nil {
 		if err := ri.FromJSON(text); err == nil {
 			return ri, nil
@@ -57,7 +57,7 @@ func getRepoIndex(stg storage.Storage, appName string) (*repo.RepoIndex, error) 
 	}
 }
 
-func setRepoIndex(stg storage.Storage, ri *repo.RepoIndex) error {
+func setRepoIndex(stg storage.Storage, ri *repo.Index) error {
 	ri.Canary++
 	if text, err := ri.ToJSON(); err == nil {
 		if err := stg.Put(ri.IndexPath(), text); err == nil {

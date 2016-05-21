@@ -57,7 +57,7 @@ func (cmd *Initrepo) Exec() *ErrorList {
 	}
 
 	// Initialize the index and store it.
-	ri := repo.NewRepoIndex(cmd.appName)
+	ri := repo.NewIndex(cmd.appName)
 	if err := setRepoIndex(stg, ri); err != nil {
 		cmd.el.Append(err)
 	}
