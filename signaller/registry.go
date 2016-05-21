@@ -59,7 +59,7 @@ func (hr *Registry) Unregister(envName, appName, hostName string) {
 // environment and application (requires Zookeeper).
 func (hr *Registry) Hosts(envName, appName string) []RegistryInfo {
 
-	var ri registryList = make(registryList, 0)
+	var ri = make(registryList, 0)
 
 	if zkConn := hr.sgnlr.getZKConnWithLock(); zkConn != nil {
 		registryPath := hr.makeRegistryPath(envName, appName, "")

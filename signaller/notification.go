@@ -21,13 +21,17 @@ func (ns NotifySource) String() string {
 	}
 }
 
+// The values that may appear as the Source in a Notification.
 const (
-	KNS_FORCED NotifySource = iota // Event was created externally to signaller
-	KNS_TIMER                      // Event was triggered by a timer
-	KNS_ZK                         // Event was triggered by Zookeeper
+	KNS_FORCED NotifySource = iota // Notification was created externally to signaller
+	KNS_TIMER                      // Notification was triggered by a timer
+	KNS_ZK                         // Notification was triggered by Zookeeper
 )
 
-// Notifications are obtained from the channel returned by Open().
+/*
+A Notification identifies which monitored application has changed.
+They are obtained from the channel returned by Open().
+*/
 type Notification struct {
 	Source  NotifySource // The mechanism that caused the event
 	Appname string       // The name of the application that caused the event

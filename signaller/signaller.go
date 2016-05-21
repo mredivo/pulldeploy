@@ -131,6 +131,6 @@ func (sgnlr *Signaller) Notify(envName, appName string, data []byte) {
 
 // GetRegistry retrieves an instance of the hosts registry.
 func (sgnlr *Signaller) GetRegistry() *Registry {
-	var hr *Registry = &Registry{sgnlr}
+	var hr = &Registry{sgnlr}
 	return hr
 }
