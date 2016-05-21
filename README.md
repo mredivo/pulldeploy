@@ -5,11 +5,11 @@ deploys and releases those packages on their target hosts.
  
 ## Documentation
 
-https://godoc.org/github.com/mredivo/pulldeploy
+[![GoDoc](https://godoc.org/github.com/mredivo/pulldeploy?status.svg)](https://godoc.org/github.com/mredivo/pulldeploy)
 
 ## Status
 
-Nearly complete, but not operational yet.
+Operational, but not all features available yet.
 
 ## Features
 
