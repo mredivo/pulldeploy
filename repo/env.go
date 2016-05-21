@@ -21,6 +21,7 @@ func newEnv() *Env {
 	return &Env{Keep: 5, Deployed: []string{}, Released: []string{}, Previewers: []string{}}
 }
 
+// SetKeep sets the number of versions to keep in the repo and on the servers.
 func (env *Env) SetKeep(keep int) {
 	env.Keep = keep
 }
@@ -89,12 +90,13 @@ func (env *Env) Release(versionName string, previewers []string) error {
 		return fmt.Errorf("version %q not deployed", versionName)
 	}
 
-	// Determine whether this is a general release, or just a preview.
+	// If specific hosts have been named, only they get the release as a preview.
 	if len(previewers) > 0 {
 		return env.releasePreview(versionName, previewers)
-	} else {
-		return env.releaseGeneral(versionName)
 	}
+
+	// The release is general, and goes out to every host.
+	return env.releaseGeneral(versionName)
 }
 
 func (env *Env) releaseGeneral(versionName string) error {

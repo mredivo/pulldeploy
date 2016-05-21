@@ -43,9 +43,8 @@ func (ri *RepoIndex) AddEnv(envName string) error {
 func (ri *RepoIndex) GetEnv(envName string) (*Env, error) {
 	if env, found := ri.Envs[envName]; found {
 		return env, nil
-	} else {
-		return nil, fmt.Errorf("environment %q not present", envName)
 	}
+	return nil, fmt.Errorf("environment %q not present", envName)
 }
 
 // SetEnv replaces an environment in the index.
@@ -76,9 +75,8 @@ func (ri *RepoIndex) AddVersion(versionName, fileName string, enabled bool) erro
 func (ri *RepoIndex) GetVersion(versionName string) (*Version, error) {
 	if version, found := ri.Versions[versionName]; found {
 		return version, nil
-	} else {
-		return nil, fmt.Errorf("version %q not present", versionName)
 	}
+	return nil, fmt.Errorf("version %q not present", versionName)
 }
 
 // SetVersion replaces a version in the index.
