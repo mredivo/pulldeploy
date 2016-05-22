@@ -20,6 +20,7 @@ type Daemon struct {
 	envName    string
 	lw         *logging.Writer
 	stg        storage.Storage
+	hr         *signaller.Registry
 	myHostname string
 }
 
@@ -62,7 +63,7 @@ func (cmd *Daemon) Exec() *ErrorList {
 	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig())
 	appEvent := sgnlr.Open()
 	defer sgnlr.Close()
-	hr := sgnlr.GetRegistry()
+	cmd.hr = sgnlr.GetRegistry()
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
@@ -82,15 +83,36 @@ func (cmd *Daemon) Exec() *ErrorList {
 
 	var registerAppHosts = func() {
 		for appName, _ := range appList {
-			// TODO: Fetch the local current version for registering
-			hr.Register(cmd.envName, appName, cmd.myHostname, "version")
+
+			// Retrieve the app definition.
+			appCfg, err := cmd.pdcfg.GetAppConfig(appName)
+			if err != nil {
+				cmd.lw.Error("Error getting configuration for %q: %s", appName, err.Error())
+				continue
+			}
+
+			// Instantiate the deployment object for this application.
+			dplmt, err := deployment.New(appName, appCfg)
+			if err != nil {
+				cmd.lw.Error("Error in deployment for %q: %s", appName, err.Error())
+				continue
+			}
+
+			// Register with current version, and ask for notifications.
+			cmd.hr.Register(cmd.envName, appName, cmd.myHostname, dplmt.GetCurrentLink())
 			sgnlr.Monitor(cmd.envName, appName)
 		}
 	}
 
 	var unregisterAppHosts = func() {
 		for appName, _ := range appList {
-			hr.Unregister(cmd.envName, appName, cmd.myHostname)
+			cmd.hr.Unregister(cmd.envName, appName, cmd.myHostname)
+		}
+	}
+
+	var synchronize = func() {
+		for appName, _ := range appList {
+			cmd.synchronize(signaller.Notification{Source: signaller.KNS_FORCED, Appname: appName})
 		}
 	}
 
@@ -99,9 +121,7 @@ func (cmd *Daemon) Exec() *ErrorList {
 	cmd.lw.Info("Startup complete")
 
 	// Perform the initial synchronization with the repo.
-	for appName, _ := range appList {
-		cmd.synchronize(signaller.Notification{Source: signaller.KNS_FORCED, Appname: appName})
-	}
+	synchronize()
 
 	// Processing loop.
 	repeat := true
@@ -126,6 +146,7 @@ func (cmd *Daemon) Exec() *ErrorList {
 			appList = cmd.pdcfg.GetAppList()
 			// Re-register and restart monitoring.
 			registerAppHosts()
+			synchronize()
 
 		case <-sigterm:
 			// Gracefully shut down.
@@ -244,6 +265,8 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 						an.Appname, cmd.envName, currentRelease)
 					// Execute the post-release command.
 					cmd.logPostCommand(dplmt.PostRelease(currentRelease))
+					cmd.hr.Unregister(cmd.envName, an.Appname, cmd.myHostname)
+					cmd.hr.Register(cmd.envName, an.Appname, cmd.myHostname, dplmt.GetCurrentLink())
 				} else {
 					cmd.lw.Error("Error setting current release for %s in %s to %q: %s",
 						an.Appname, cmd.envName, currentRelease, err.Error())
