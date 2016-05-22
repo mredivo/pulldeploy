@@ -42,6 +42,8 @@ func (ri *Index) AddEnv(envName string) error {
 // GetEnv retrieves an environment from the index.
 func (ri *Index) GetEnv(envName string) (*Env, error) {
 	if env, found := ri.Envs[envName]; found {
+		// Provide private access to the Versions.
+		env.versions = ri.Versions
 		return env, nil
 	}
 	return nil, fmt.Errorf("environment %q not present", envName)

@@ -15,6 +15,7 @@ type Env struct {
 	Deployed   []string `json:"deployed"`   // The set of versions deployed to this environment
 	Released   []string `json:"released"`   // The set of versions released to this environment
 	Previewers []string `json:"previewers"` // The set of hostnames eligible for the Preview version
+	versions   map[string]*Version
 }
 
 func newEnv() *Env {
@@ -88,6 +89,18 @@ func (env *Env) Release(versionName string, previewers []string) error {
 	}
 	if !found {
 		return fmt.Errorf("version %q not deployed", versionName)
+	}
+
+	// Ensure this version has not been disabled.
+	if vers, found := env.versions[versionName]; found {
+		if !vers.Enabled {
+			return fmt.Errorf("version %q has been disabled", versionName)
+		}
+		// Mark it as having been released.
+		vers.Release()
+	} else {
+		// This shouldn't happen, but just in case...
+		return fmt.Errorf("version %q not found in environment", versionName)
 	}
 
 	// If specific hosts have been named, only they get the release as a preview.
