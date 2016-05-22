@@ -15,11 +15,12 @@ import (
 
 // pulldeploy daemon ...
 type Daemon struct {
-	el      *ErrorList
-	pdcfg   pdconfig.PDConfig
-	envName string
-	lw      *logging.Writer
-	stg     storage.Storage
+	el         *ErrorList
+	pdcfg      pdconfig.PDConfig
+	envName    string
+	lw         *logging.Writer
+	stg        storage.Storage
+	myHostname string
 }
 
 func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
@@ -73,22 +74,23 @@ func (cmd *Daemon) Exec() *ErrorList {
 	}
 
 	// Determine the local hostname.
-	myHostname, _ := os.Hostname()
-	cmd.lw.Info("Registering host name %q", myHostname)
+	cmd.myHostname, _ = os.Hostname()
+	cmd.lw.Info("Registering host name %q", cmd.myHostname)
 
 	// Get the set of applications to monitor.
 	appList := cmd.pdcfg.GetAppList()
 
 	var registerAppHosts = func() {
 		for appName, _ := range appList {
-			hr.Register(cmd.envName, appName, myHostname, "version")
+			// TODO: Fetch the local current version for registering
+			hr.Register(cmd.envName, appName, cmd.myHostname, "version")
 			sgnlr.Monitor(cmd.envName, appName)
 		}
 	}
 
 	var unregisterAppHosts = func() {
 		for appName, _ := range appList {
-			hr.Unregister(cmd.envName, appName, myHostname)
+			hr.Unregister(cmd.envName, appName, cmd.myHostname)
 		}
 	}
 
@@ -234,16 +236,17 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			// Determine the currently released version on the local host, and
 			// update if necessary.
 			localRelease := dplmt.GetCurrentLink()
-			cmd.lw.Debug("Current release: local=%q, repo=%q", localRelease, env.Current)
-			if localRelease != env.Current && env.Current != "" {
-				if err := dplmt.Link(env.Current); err == nil {
+			currentRelease := env.GetCurrentVersion(cmd.myHostname)
+			cmd.lw.Debug("Current release: local=%q, repo=%q", localRelease, currentRelease)
+			if localRelease != currentRelease && currentRelease != "" {
+				if err := dplmt.Link(currentRelease); err == nil {
 					cmd.lw.Info("Current release for %s in %s set to %q",
-						an.Appname, cmd.envName, env.Current)
+						an.Appname, cmd.envName, currentRelease)
 					// Execute the post-release command.
-					cmd.logPostCommand(dplmt.PostRelease(env.Current))
+					cmd.logPostCommand(dplmt.PostRelease(currentRelease))
 				} else {
 					cmd.lw.Error("Error setting current release for %s in %s to %q: %s",
-						an.Appname, cmd.envName, env.Current, err.Error())
+						an.Appname, cmd.envName, currentRelease, err.Error())
 				}
 			}
 		}

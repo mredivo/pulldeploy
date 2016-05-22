@@ -99,6 +99,16 @@ func (env *Env) Release(versionName string, previewers []string) error {
 	return env.releaseGeneral(versionName)
 }
 
+// GetCurrentVersion returns the current version for the specified host.
+func (env *Env) GetCurrentVersion(hostName string) string {
+	for _, previewer := range env.Previewers {
+		if previewer == hostName {
+			return env.Preview
+		}
+	}
+	return env.Current
+}
+
 func (env *Env) releaseGeneral(versionName string) error {
 
 	// A general release cancels any outstanding preview.
