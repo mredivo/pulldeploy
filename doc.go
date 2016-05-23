@@ -30,7 +30,7 @@ Commands:
         pulldeploy listhosts -app=<app> -env=<env>
 
     Daemon:
-        pulldeploy daemon -env=<env> <daemon args>...
+        pulldeploy daemon -env=<env> [-logfile=<logfilename>]
 */
 package main
 
@@ -68,7 +68,7 @@ Commands:
         pulldeploy listhosts -app=<app> -env=<env>
 
     Daemon:
-        pulldeploy daemon -env=<env> <daemon args>...
+        pulldeploy daemon -env=<env> [-logfile=<logfilename>]
 `
 
 func showCommandHelp(command string) bool {
@@ -101,7 +101,7 @@ func showCommandHelp(command string) bool {
 	case "listhosts":
 		fmt.Println("usage: pulldeploy listhosts -app=<app> -env=<env>")
 	case "daemon":
-		fmt.Println("usage: pulldeploy daemon -env=<env> <daemon args>...")
+		fmt.Println("usage: pulldeploy daemon -env=<env> [-logfile=<logfilename>]")
 	default:
 		fmt.Printf("invalid command: %q\n", command)
 		isValid = false

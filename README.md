@@ -60,6 +60,6 @@ Commands:
         pulldeploy listhosts -app=<app> -env=<env>
 
     Daemon:
-        pulldeploy daemon -env=<env> <daemon args>...
+        pulldeploy daemon -env=<env> [-logfile=<logfilename>]
 
 ```
