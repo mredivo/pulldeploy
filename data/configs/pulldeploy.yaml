@@ -1,6 +1,10 @@
 # PullDeploy Configuration file
 
-accessmethod: "local"   # One of the KST_* AccessMethod constants
+# How much to log: debug|info|warn|error
+loglevel: "info"
+
+# Which storage access method to use: One of the KST_* AccessMethod constants
+accessmethod: "local"
 
 storage:
     local:  # KST_LOCAL

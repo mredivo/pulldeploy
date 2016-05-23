@@ -43,6 +43,7 @@ type AppConfig struct {
 
 // The definition of the configuration object shared throughout PullDeploy.
 type PDConfig interface {
+	GetLogLevel() string
 	GetVersionInfo() *VersionInfo
 	GetSignallerConfig() *SignallerConfig
 	GetStorageConfig() *StorageConfig
@@ -51,7 +52,12 @@ type PDConfig interface {
 	RefreshAppList() []error
 }
 
-// GetVersionInfo returns the object containing bakedin version information.
+// GetLogLevel returns the level at which to log.
+func (pdcfg *pdConfig) GetLogLevel() string {
+	return pdcfg.LogLevel
+}
+
+// GetVersionInfo returns the object containing baked-in version information.
 func (pdcfg *pdConfig) GetVersionInfo() *VersionInfo {
 	return &versionInfo
 }

@@ -21,6 +21,7 @@ type pdConfig struct {
 	configDir    string                // Invisible to YAML decoder, determined at runtime
 	configFile   string                // Invisible to YAML decoder, determined at runtime
 	appList      map[string]*AppConfig // Invisible to YAML decoder, loaded separately
+	LogLevel     string                // The level at which to log: debug|info|warn|error
 	AccessMethod string                // One of the KST_* AccessMethod constants
 	Storage      map[string]map[string]string
 	Signaller    SignallerConfig

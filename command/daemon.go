@@ -18,6 +18,7 @@ type Daemon struct {
 	el         *ErrorList
 	pdcfg      pdconfig.PDConfig
 	envName    string
+	logFile    string
 	lw         *logging.Writer
 	stg        storage.Storage
 	hr         *signaller.Registry
@@ -26,12 +27,13 @@ type Daemon struct {
 
 func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
 
-	var envName string
+	var envName, logFile string
 	cmd.el = NewErrorList(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.StringVar(&envName, "env", "", "environment to be monitored")
+	cmdFlags.StringVar(&logFile, "logfile", "", "name of log file (default stdout)")
 	cmdFlags.Parse(osArgs)
 
 	if envName == "" {
@@ -39,6 +41,7 @@ func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	} else {
 		cmd.envName = envName
 	}
+	cmd.logFile = logFile
 
 	return cmd.el
 }
@@ -54,9 +57,9 @@ func (cmd *Daemon) Exec() *ErrorList {
 	signal.Notify(sigusr1, syscall.SIGUSR1)
 
 	// Open the logger.
-	logger := logging.New("pulldeploy", "", true)
+	logger := logging.New("pulldeploy", cmd.logFile, true)
 	defer logger.Close()
-	cmd.lw = logger.GetWriter("", "debug")
+	cmd.lw = logger.GetWriter("", cmd.pdcfg.GetLogLevel())
 	cmd.lw.Info(cmd.pdcfg.GetVersionInfo().OneLine())
 
 	// Instantiate the signaller that tells us when apps need attention.
