@@ -2,24 +2,31 @@ package repo
 
 import (
 	"fmt"
+	"time"
 )
 
 const kMAX_RLS_HST_ENTRIES = 10
 
+// HistEvent associates a timestamp with a version for deploy/release activity.
+type HistEvent struct {
+	Version string    `json:"version"`   // The version affected
+	TS      time.Time `json:"timestamp"` // The time at which the event occurred
+}
+
 // Env enumerates the versions deployed to an environment, and identifies the current release.
 type Env struct {
-	Keep       int      `json:"keep"`       // The maximum number of versions to retain when adding
-	Prior      string   `json:"prior"`      // The version most recently active prior to current
-	Current    string   `json:"current"`    // The currently active version
-	Preview    string   `json:"preview"`    // The version considered active by the Previewers hosts
-	Deployed   []string `json:"deployed"`   // The set of versions deployed to this environment
-	Released   []string `json:"released"`   // The set of versions released to this environment
-	Previewers []string `json:"previewers"` // The set of hostnames eligible for the Preview version
+	Keep       int         `json:"keep"`       // The maximum number of versions to retain when adding
+	Prior      string      `json:"prior"`      // The version most recently active prior to current
+	Current    string      `json:"current"`    // The currently active version
+	Preview    string      `json:"preview"`    // The version considered active by the Previewers hosts
+	Deployed   []HistEvent `json:"deployed"`   // The set of versions deployed to this environment
+	Released   []HistEvent `json:"released"`   // The set of versions released to this environment
+	Previewers []string    `json:"previewers"` // The set of hostnames eligible for the Preview version
 	versions   map[string]*Version
 }
 
 func newEnv() *Env {
-	return &Env{Keep: 5, Deployed: []string{}, Released: []string{}, Previewers: []string{}}
+	return &Env{Keep: 5, Deployed: []HistEvent{}, Released: []HistEvent{}, Previewers: []string{}}
 }
 
 // SetKeep sets the number of versions to keep in the repo and on the servers.
@@ -34,7 +41,7 @@ func (env *Env) Deploy(versionName string, onDelete deployOnDelete) error {
 
 	// Ensure that this version of the artifact is not already deployed.
 	for _, v := range env.Deployed {
-		if v == versionName {
+		if v.Version == versionName {
 			return fmt.Errorf("version %q already deployed", versionName)
 		}
 	}
@@ -44,34 +51,34 @@ func (env *Env) Deploy(versionName string, onDelete deployOnDelete) error {
 		// Do not remove the current, prior, or preview releases.
 		candidate := entryCount - 1
 		if candidate >= 0 {
-			if env.Deployed[candidate] == env.Current ||
-				env.Deployed[candidate] == env.Prior ||
-				env.Deployed[candidate] == env.Preview {
+			if env.Deployed[candidate].Version == env.Current ||
+				env.Deployed[candidate].Version == env.Prior ||
+				env.Deployed[candidate].Version == env.Preview {
 				candidate-- // Skip this one
 			}
 		}
 		if candidate >= 0 {
-			if env.Deployed[candidate] == env.Current ||
-				env.Deployed[candidate] == env.Prior ||
-				env.Deployed[candidate] == env.Preview {
+			if env.Deployed[candidate].Version == env.Current ||
+				env.Deployed[candidate].Version == env.Prior ||
+				env.Deployed[candidate].Version == env.Preview {
 				candidate-- // Skip this one too
 			}
 		}
 		if candidate >= 0 {
-			if env.Deployed[candidate] == env.Current ||
-				env.Deployed[candidate] == env.Prior ||
-				env.Deployed[candidate] == env.Preview {
+			if env.Deployed[candidate].Version == env.Current ||
+				env.Deployed[candidate].Version == env.Prior ||
+				env.Deployed[candidate].Version == env.Preview {
 				candidate-- // And this one
 			}
 		}
 		if candidate >= 0 {
-			onDelete(env.Deployed[candidate])
+			onDelete(env.Deployed[candidate].Version)
 			env.Deployed = append(env.Deployed[:candidate], env.Deployed[candidate+1:]...)
 		}
 	}
 
 	// Add the new entry at the beginning of the list.
-	env.Deployed = append([]string{versionName}, env.Deployed...)
+	env.Deployed = append([]HistEvent{HistEvent{versionName, time.Now()}}, env.Deployed...)
 
 	return nil
 }
@@ -82,7 +89,7 @@ func (env *Env) Release(versionName string, previewers []string) error {
 	// Ensure that this version of the artifact has been deployed.
 	found := false
 	for _, v := range env.Deployed {
-		if v == versionName {
+		if v.Version == versionName {
 			found = true
 			break
 		}
@@ -135,7 +142,7 @@ func (env *Env) releaseGeneral(versionName string) error {
 		env.Current = versionName
 
 		// Append to release history, and remove old entries when size maxes out.
-		env.Released = append([]string{versionName}, env.Released...)
+		env.Released = append([]HistEvent{HistEvent{versionName, time.Now()}}, env.Released...)
 		if len(env.Released) > kMAX_RLS_HST_ENTRIES {
 			env.Released = env.Released[:kMAX_RLS_HST_ENTRIES]
 		}
