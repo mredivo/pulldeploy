@@ -10,16 +10,16 @@ import (
 
 // pulldeploy listhosts -app=<app> -env=<env>
 type Listhosts struct {
-	el      *ErrorList
+	result  *Result
 	pdcfg   pdconfig.PDConfig
 	appName string
 	envName string
 }
 
-func (cmd *Listhosts) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Listhosts) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var appName, envName string
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -28,26 +28,26 @@ func (cmd *Listhosts) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs 
 	cmdFlags.Parse(osArgs)
 
 	if appName == "" {
-		cmd.el.Errorf("app is a mandatory argument")
+		cmd.result.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if envName == "" {
-		cmd.el.Errorf("env is a mandatory argument")
+		cmd.result.Errorf("env is a mandatory argument")
 	} else {
 		cmd.envName = envName
 	}
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Listhosts) Exec() *ErrorList {
+func (cmd *Listhosts) Exec() *Result {
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Open the signaller, for access to the hosts registry.
@@ -69,5 +69,5 @@ func (cmd *Listhosts) Exec() *ErrorList {
 		fmt.Printf("%d hosts\n", count)
 	}
 
-	return cmd.el
+	return cmd.result
 }

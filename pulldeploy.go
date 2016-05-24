@@ -79,22 +79,27 @@ func main() {
 
 	// If a command was recognized, validate and execute it.
 	var exitCode int
+	var completionMessage string
 	if cmd != nil {
-		if el := cmd.CheckArgs(os.Args[1], pdcfg, os.Args[2:]); el.Len() == 0 {
-			el = cmd.Exec()
-			for _, s := range el.Errors() {
+		if result := cmd.CheckArgs(os.Args[1], pdcfg, os.Args[2:]); result.ErrorCount() == 0 {
+			result = cmd.Exec()
+			for _, s := range result.Errors() {
 				fmt.Println(s)
 				exitCode = 4
 			}
+			completionMessage = result.Message()
 		} else {
 			exitCode = 2
-			for _, s := range el.Errors() {
+			for _, s := range result.Errors() {
 				fmt.Println(s)
 			}
 			showCommandHelp(os.Args[1])
 		}
 	}
 
+	if len(completionMessage) > 0 {
+		fmt.Println(completionMessage)
+	}
 	if exitCode > 0 {
 		os.Exit(exitCode)
 	}

@@ -8,16 +8,16 @@ import (
 
 // pulldeploy purge -app=<app> -version=<version>
 type Purge struct {
-	el         *ErrorList
+	result     *Result
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 }
 
-func (cmd *Purge) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Purge) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var appName, appVersion string
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -26,21 +26,21 @@ func (cmd *Purge) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []st
 	cmdFlags.Parse(osArgs)
 
 	if appName == "" {
-		cmd.el.Errorf("app is a mandatory argument")
+		cmd.result.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		cmd.el.Errorf("version is a mandatory argument")
+		cmd.result.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Purge) Exec() *ErrorList {
+func (cmd *Purge) Exec() *Result {
 	placeHolder("purge(%s, %s)\n", cmd.appName, cmd.appVersion)
-	return cmd.el
+	return cmd.result
 }

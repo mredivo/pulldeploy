@@ -10,23 +10,23 @@ import (
 
 // pulldeploy list
 type List struct {
-	el    *ErrorList
-	pdcfg pdconfig.PDConfig
+	result *Result
+	pdcfg  pdconfig.PDConfig
 }
 
-func (cmd *List) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *List) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	// Define a null set, so we can complain about extraneous args.
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	cmdFlags.Parse(osArgs)
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *List) Exec() *ErrorList {
+func (cmd *List) Exec() *Result {
 
 	// Fetch the list of applications.
 	appList := cmd.pdcfg.GetAppList()
@@ -51,5 +51,5 @@ func (cmd *List) Exec() *ErrorList {
 		fmt.Printf("    Group       : %s\n", appConfig.Group)
 	}
 
-	return cmd.el
+	return cmd.result
 }

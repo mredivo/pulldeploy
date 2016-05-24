@@ -15,7 +15,7 @@ import (
 
 // pulldeploy daemon ...
 type Daemon struct {
-	el         *ErrorList
+	result     *Result
 	pdcfg      pdconfig.PDConfig
 	envName    string
 	logFile    string
@@ -25,10 +25,10 @@ type Daemon struct {
 	myHostname string
 }
 
-func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var envName, logFile string
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -37,16 +37,16 @@ func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmdFlags.Parse(osArgs)
 
 	if envName == "" {
-		cmd.el.Errorf("env is a mandatory argument")
+		cmd.result.Errorf("env is a mandatory argument")
 	} else {
 		cmd.envName = envName
 	}
 	cmd.logFile = logFile
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Daemon) Exec() *ErrorList {
+func (cmd *Daemon) Exec() *Result {
 
 	// Set up reload and termination signal handlers.
 	var sigterm = make(chan os.Signal, 1)
@@ -73,8 +73,8 @@ func (cmd *Daemon) Exec() *ErrorList {
 	if stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params); err == nil {
 		cmd.stg = stg
 	} else {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Determine the local hostname.
@@ -161,7 +161,7 @@ func (cmd *Daemon) Exec() *ErrorList {
 	unregisterAppHosts()
 	cmd.lw.Info("Termination complete")
 
-	return cmd.el
+	return cmd.result
 }
 
 func (cmd *Daemon) synchronize(an signaller.Notification) {

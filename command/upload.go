@@ -11,7 +11,7 @@ import (
 
 // pulldeploy upload -app=<app> -version=<version> [-disabled] <file>
 type Upload struct {
-	el         *ErrorList
+	result     *Result
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
@@ -19,11 +19,11 @@ type Upload struct {
 	filename   string
 }
 
-func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var appName, appVersion string
 	var disabled bool
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -33,13 +33,13 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmdFlags.Parse(osArgs)
 
 	if appName == "" {
-		cmd.el.Errorf("app is a mandatory argument")
+		cmd.result.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		cmd.el.Errorf("version is a mandatory argument")
+		cmd.result.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
@@ -47,31 +47,31 @@ func (cmd *Upload) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmd.disabled = disabled
 
 	if len(cmdFlags.Args()) < 1 {
-		cmd.el.Errorf("filename is a mandatory argument")
+		cmd.result.Errorf("filename is a mandatory argument")
 	} else if len(cmdFlags.Args()) > 1 {
-		cmd.el.Errorf("only one filename may be specified")
+		cmd.result.Errorf("only one filename may be specified")
 	} else {
 		cmd.filename = cmdFlags.Args()[0]
 	}
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Upload) Exec() *ErrorList {
+func (cmd *Upload) Exec() *Result {
 
 	// Ensure the app definition exists.
 	appCfg, err := cmd.pdcfg.GetAppConfig(cmd.appName)
 	if err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
 	stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params)
 	if err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Retrieve the repository index.
@@ -84,16 +84,16 @@ func (cmd *Upload) Exec() *ErrorList {
 			// Determine the content length.
 			fi, err := fh.Stat()
 			if err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 
 			// Write the artifact to the repo.
 			repoFilename := ri.ArtifactFilename(cmd.appVersion, appCfg.ArtifactType)
 			repoPath := ri.ArtifactPath(repoFilename)
 			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 
 			// Calculate the artifact HMAC and write that to the repo.
@@ -101,31 +101,31 @@ func (cmd *Upload) Exec() *ErrorList {
 				hmac := deployment.CalculateHMAC(fh, deployment.NewHMACCalculator(appCfg.Secret))
 				hmacPath := ri.HMACPath(repoFilename)
 				if err := stg.Put(hmacPath, hmac); err != nil {
-					cmd.el.Append(err)
-					return cmd.el
+					cmd.result.AppendError(err)
+					return cmd.result
 				}
 			} else {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 
 			// Update the index.
 			if err := ri.AddVersion(cmd.appVersion, repoFilename, !cmd.disabled); err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 
 			// Write the index back.
 			if err := setRepoIndex(stg, ri); err != nil {
-				cmd.el.Append(err)
+				cmd.result.AppendError(err)
 			}
 		} else {
-			cmd.el.Append(err)
-			return cmd.el
+			cmd.result.AppendError(err)
+			return cmd.result
 		}
 	} else {
-		cmd.el.Append(err)
+		cmd.result.AppendError(err)
 	}
 
-	return cmd.el
+	return cmd.result
 }

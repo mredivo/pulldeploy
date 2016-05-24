@@ -10,7 +10,7 @@ import (
 
 // pulldeploy release -app=<app> -version=<version> -env=<env> [host1, host2, ...]
 type Release struct {
-	el         *ErrorList
+	result     *Result
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
@@ -18,10 +18,10 @@ type Release struct {
 	hosts      []string
 }
 
-func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var appName, appVersion, envName string
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -31,42 +31,42 @@ func (cmd *Release) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []
 	cmdFlags.Parse(osArgs)
 
 	if appName == "" {
-		cmd.el.Errorf("app is a mandatory argument")
+		cmd.result.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		cmd.el.Errorf("version is a mandatory argument")
+		cmd.result.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
 
 	if envName == "" {
-		cmd.el.Errorf("env is a mandatory argument")
+		cmd.result.Errorf("env is a mandatory argument")
 	} else {
 		cmd.envName = envName
 	}
 
 	cmd.hosts = cmdFlags.Args()
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Release) Exec() *ErrorList {
+func (cmd *Release) Exec() *Result {
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
 	stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params)
 	if err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Open the signaller, for notifying the pulldeploy daemons.
@@ -79,35 +79,35 @@ func (cmd *Release) Exec() *ErrorList {
 
 		// Retrieve the environment.
 		if env, err := ri.GetEnv(cmd.envName); err != nil {
-			cmd.el.Append(err)
-			return cmd.el
+			cmd.result.AppendError(err)
+			return cmd.result
 		} else {
 
 			// Indicate that this is the currently active version.
 			if err := env.Release(cmd.appVersion, cmd.hosts); err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 
 			// Put the updated environment back into the index.
 			if err := ri.SetEnv(cmd.envName, env); err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 		}
 
 		// Write the index back.
 		if err := setRepoIndex(stg, ri); err != nil {
-			cmd.el.Append(err)
-			return cmd.el
+			cmd.result.AppendError(err)
+			return cmd.result
 		}
 
 		// Send out a notification.
 		sgnlr.Notify(cmd.envName, cmd.appName, []byte{})
 
 	} else {
-		cmd.el.Append(err)
+		cmd.result.AppendError(err)
 	}
 
-	return cmd.el
+	return cmd.result
 }

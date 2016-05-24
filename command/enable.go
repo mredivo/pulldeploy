@@ -9,16 +9,16 @@ import (
 
 // pulldeploy enable -app=<app> -version=<version>
 type Enable struct {
-	el         *ErrorList
+	result     *Result
 	pdcfg      pdconfig.PDConfig
 	appName    string
 	appVersion string
 }
 
-func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *ErrorList {
+func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
 
 	var appName, appVersion string
-	cmd.el = NewErrorList(cmdName)
+	cmd.result = NewResult(cmdName)
 	cmd.pdcfg = pdcfg
 
 	cmdFlags := flag.NewFlagSet(cmdName, flag.ExitOnError)
@@ -27,34 +27,34 @@ func (cmd *Enable) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 	cmdFlags.Parse(osArgs)
 
 	if appName == "" {
-		cmd.el.Errorf("app is a mandatory argument")
+		cmd.result.Errorf("app is a mandatory argument")
 	} else {
 		cmd.appName = appName
 	}
 
 	if appVersion == "" {
-		cmd.el.Errorf("version is a mandatory argument")
+		cmd.result.Errorf("version is a mandatory argument")
 	} else {
 		cmd.appVersion = appVersion
 	}
 
-	return cmd.el
+	return cmd.result
 }
 
-func (cmd *Enable) Exec() *ErrorList {
+func (cmd *Enable) Exec() *Result {
 
 	// Ensure the app definition exists.
 	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Get access to the repo storage.
 	stgcfg := cmd.pdcfg.GetStorageConfig()
 	stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params)
 	if err != nil {
-		cmd.el.Append(err)
-		return cmd.el
+		cmd.result.AppendError(err)
+		return cmd.result
 	}
 
 	// Retrieve the repository index.
@@ -62,23 +62,23 @@ func (cmd *Enable) Exec() *ErrorList {
 
 		// Retrieve and update the version.
 		if vers, err := ri.GetVersion(cmd.appVersion); err != nil {
-			cmd.el.Append(err)
-			return cmd.el
+			cmd.result.AppendError(err)
+			return cmd.result
 		} else {
 			vers.Enable()
 			if err := ri.SetVersion(cmd.appVersion, vers); err != nil {
-				cmd.el.Append(err)
-				return cmd.el
+				cmd.result.AppendError(err)
+				return cmd.result
 			}
 		}
 
 		// Write the index back.
 		if err := setRepoIndex(stg, ri); err != nil {
-			cmd.el.Append(err)
+			cmd.result.AppendError(err)
 		}
 	} else {
-		cmd.el.Append(err)
+		cmd.result.AppendError(err)
 	}
 
-	return cmd.el
+	return cmd.result
 }
