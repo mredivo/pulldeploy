@@ -4,13 +4,13 @@ Package deployment provides methods for managing application deployment and rele
 A deployment resides on the server running PullDeploy in daemon mode. It has the following
 directory structure:
 
-	/BASEDIR/APPNAME/.artifact
+	/BASEDIR/APPNAME/artifact
 	/BASEDIR/APPNAME/current  (a symlink)
 	/BASEDIR/APPNAME/release
 
-Artifacts retrieved from the repository are placed into the ".artifact" directory:
+Artifacts retrieved from the repository are placed into the "artifact" directory:
 
-	/BASEDIR/APPNAME/.artifact/APPNAME-VERSION.ARTIFACTTYPE
+	/BASEDIR/APPNAME/artifact/APPNAME-VERSION.ARTIFACTTYPE
 
 Deployed releases are unpacked into a directory named for the version, under the
 "release" directory.
@@ -40,7 +40,7 @@ import (
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
-const kARTIFACTDIR = ".artifact"
+const kARTIFACTDIR = "artifact"
 const kRELEASEDIR = "release"
 const kCURRENTDIR = "current"
 const kHMACSUFFIX = "hmac"
