@@ -23,6 +23,7 @@ type Daemon struct {
 	stg        storage.Storage
 	hr         *signaller.Registry
 	myHostname string
+	canary     map[string]int
 }
 
 func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []string) *Result {
@@ -42,6 +43,7 @@ func (cmd *Daemon) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []s
 		cmd.envName = envName
 	}
 	cmd.logFile = logFile
+	cmd.canary = make(map[string]int)
 
 	return cmd.result
 }
@@ -191,6 +193,12 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			return
 		} else {
 
+			// First check whether the repository has changed since we last looked.
+			if canary, found := cmd.canary[an.Appname]; found && canary == ri.Canary {
+				cmd.lw.Debug("Canary unchanged for %q: %d", an.Appname, canary)
+				return
+			}
+
 			// Determine whether any new versions have been deployed since we last checked.
 			localVersionList := dplmt.ListVersions()
 			var deployedVersionList []string
@@ -279,6 +287,9 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 						an.Appname, cmd.envName, currentRelease, err.Error())
 				}
 			}
+
+			// Note that the local host is in sync with the index.
+			cmd.canary[an.Appname] = ri.Canary
 		}
 
 	} else {
