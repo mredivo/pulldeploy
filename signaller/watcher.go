@@ -21,6 +21,7 @@ func (sgnlr *Signaller) connectWithLock() <-chan zk.Event {
 
 	var connEvent <-chan zk.Event
 	sgnlr.zkConn, connEvent, _ = zk.Connect(sgnlr.cfg.ZK.Servers, time.Second)
+	sgnlr.zkConn.SetLogger(sgnlr.zkLogger)
 
 	return connEvent
 }

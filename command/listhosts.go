@@ -51,7 +51,7 @@ func (cmd *Listhosts) Exec() *Result {
 	}
 
 	// Open the signaller, for access to the hosts registry.
-	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig())
+	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig(), nil)
 	sgnlr.Open()
 	defer sgnlr.Close()
 

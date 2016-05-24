@@ -67,7 +67,7 @@ func (cmd *Deploy) Exec() *Result {
 	}
 
 	// Open the signaller, for notifying the pulldeploy daemons.
-	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig())
+	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig(), nil)
 	sgnlr.Open()
 	defer sgnlr.Close()
 

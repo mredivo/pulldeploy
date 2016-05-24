@@ -63,7 +63,7 @@ func (cmd *Daemon) Exec() *Result {
 	cmd.lw.Info(cmd.pdcfg.GetVersionInfo().OneLine())
 
 	// Instantiate the signaller that tells us when apps need attention.
-	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig())
+	sgnlr := signaller.New(cmd.pdcfg.GetSignallerConfig(), cmd.lw)
 	appEvent := sgnlr.Open()
 	defer sgnlr.Close()
 	cmd.hr = sgnlr.GetRegistry()

@@ -12,6 +12,7 @@ import (
 
 	"github.com/samuel/go-zookeeper/zk"
 
+	"github.com/mredivo/pulldeploy/logging"
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
 
@@ -22,13 +23,24 @@ type Signaller struct {
 	wg        sync.WaitGroup           // A waitgroup to monitor lifetime of all goroutines
 	quit      chan struct{}            // Closing this channel causes all goroutines to exit
 	zkConn    *zk.Conn                 // The connection to Zookeeper, if used, else nil
+	zkLogger  zk.Logger                // A go-zookeeper custom logger
 	connState chan bool                // The channel on which we watch session state
 	appChange chan Notification        // The channel on which we propagate app events
 	watches   map[string]interface{}   // A lookup table of all the watched paths
 }
 
+type zkLogger struct {
+	lw *logging.Writer
+}
+
+func (l zkLogger) Printf(format string, a ...interface{}) {
+	if l.lw != nil {
+		l.lw.Debug(format, a...)
+	}
+}
+
 // New returns a new Signaller.
-func New(cfg *pdconfig.SignallerConfig) *Signaller {
+func New(cfg *pdconfig.SignallerConfig, lw *logging.Writer) *Signaller {
 
 	// Create object, apply arguments.
 	sgnlr := &Signaller{}
@@ -36,6 +48,7 @@ func New(cfg *pdconfig.SignallerConfig) *Signaller {
 
 	// Create internal resources.
 	sgnlr.quit = make(chan struct{}, 1)
+	sgnlr.zkLogger = &zkLogger{lw}
 	sgnlr.connState = make(chan bool, 10)
 	sgnlr.appChange = make(chan Notification, 100)
 	sgnlr.watches = make(map[string]interface{})
