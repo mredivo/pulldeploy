@@ -22,7 +22,7 @@ func withZookeeper(t *testing.T) {
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{"localhost:2181"}, "/pulldeploy"},
-	})
+	}, nil)
 	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 
@@ -36,7 +36,7 @@ func withoutZookeeper(t *testing.T) {
 		1,
 		5,
 		pdconfig.ZookeeperConfig{[]string{}, ""},
-	})
+	}, nil)
 	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 

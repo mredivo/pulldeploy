@@ -19,9 +19,13 @@ func (sgnlr *Signaller) connectWithLock() <-chan zk.Event {
 		sgnlr.zkConn = nil
 	}
 
+	// sgnlr.zkConn.SetLogger() causes a race; this avoids it.
+	var loggerOption = func(c *zk.Conn) {
+		c.SetLogger(sgnlr.zkLogger)
+	}
+
 	var connEvent <-chan zk.Event
-	sgnlr.zkConn, connEvent, _ = zk.Connect(sgnlr.cfg.ZK.Servers, time.Second)
-	sgnlr.zkConn.SetLogger(sgnlr.zkLogger)
+	sgnlr.zkConn, connEvent, _ = zk.Connect(sgnlr.cfg.ZK.Servers, time.Second, loggerOption)
 
 	return connEvent
 }
