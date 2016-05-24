@@ -81,37 +81,19 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 		return nil, errors.New("Deployment initialization error: BaseDir is mandatory")
 	}
 
-	// The root dir must not be "/".
-	rp := absPath(d.cfg.BaseDir)
-	if rp == "/" {
+	// The parent directory must not be "/".
+	parentDir := absPath(d.cfg.BaseDir)
+	if parentDir == "/" {
 		return nil, errors.New("Deployment initialization error: \"/\" not permitted as BaseDir")
 	}
 
-	// The root dir path must be at least 2 elements ("/foo" has 2: ["", "foo"]).
-	// TODO: put minimum path length into configuration.
-	if dirs := strings.Split(rp, "/"); len(dirs) < 3 {
-		return nil, errors.New("Deployment initialization error: BaseDir must be at least 2 levels deep")
-	}
-
-	// The root dir must exist.
-	if _, err := os.Stat(rp); err != nil {
+	// The parent directory must exist.
+	if _, err := os.Stat(parentDir); err != nil {
 		return nil, fmt.Errorf("Deployment initialization error: unable to stat BaseDir: %s", err.Error())
 	}
 
-	// Derive the UID/GID from the username/groupname
-	// NOTE: Go doesn't yet support looking up a GID from a name, so
-	//       we use the gid from the user.
-	if user, err := user.Lookup(d.cfg.User); err == nil {
-		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
-			d.uid = int(i)
-		}
-		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
-			d.gid = int(i)
-		}
-	}
-
 	// If the base dir doesn't exist, create it.
-	d.baseDir = path.Join(rp, appName)
+	d.baseDir = path.Join(parentDir, appName)
 	if _, err := os.Stat(d.baseDir); err != nil {
 		if err := makeDir(d.baseDir, d.uid, d.gid, 0755); err != nil {
 			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
@@ -131,6 +113,18 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 	if _, err := os.Stat(d.releaseDir); err != nil {
 		if err := makeDir(d.releaseDir, d.uid, d.gid, 0755); err != nil {
 			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
+		}
+	}
+
+	// Derive the UID/GID from the username/groupname
+	// NOTE: Go doesn't yet support looking up a GID from a name, so
+	//       we use the gid from the user.
+	if user, err := user.Lookup(d.cfg.User); err == nil {
+		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
+			d.uid = int(i)
+		}
+		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
+			d.gid = int(i)
 		}
 	}
 
