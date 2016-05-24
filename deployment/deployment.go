@@ -81,6 +81,18 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 		return nil, errors.New("Deployment initialization error: BaseDir is mandatory")
 	}
 
+	// Derive the UID/GID from the username/groupname.
+	// NOTE: Go doesn't yet support looking up a GID from a name, so
+	//       we use the gid from the user.
+	if user, err := user.Lookup(d.cfg.User); err == nil {
+		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
+			d.uid = int(i)
+		}
+		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
+			d.gid = int(i)
+		}
+	}
+
 	// The parent directory must not be "/".
 	parentDir := absPath(d.cfg.BaseDir)
 	if parentDir == "/" {
@@ -113,18 +125,6 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 	if _, err := os.Stat(d.releaseDir); err != nil {
 		if err := makeDir(d.releaseDir, d.uid, d.gid, 0755); err != nil {
 			return nil, fmt.Errorf("Deployment initialization error: %s", err.Error())
-		}
-	}
-
-	// Derive the UID/GID from the username/groupname
-	// NOTE: Go doesn't yet support looking up a GID from a name, so
-	//       we use the gid from the user.
-	if user, err := user.Lookup(d.cfg.User); err == nil {
-		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
-			d.uid = int(i)
-		}
-		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
-			d.gid = int(i)
 		}
 	}
 
