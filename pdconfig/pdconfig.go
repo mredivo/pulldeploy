@@ -31,7 +31,7 @@ type sysCommand struct {
 
 // ArtifactConfig defines the valid artifact types and how to unpack them.
 type ArtifactConfig struct {
-	Insecure  bool       // True if configuration was loaded from world-writable file
+	Insecure  bool       // True if configuration was loaded from insecure file
 	Extension string     // The filename extension to use for this artifact type
 	Extract   sysCommand // The command used to unpack this artifact type
 }
@@ -45,7 +45,7 @@ type AppConfig struct {
 	BaseDir      string // The base directory of the deployment on the app server
 	User         string // The user that should own all deployed artifacts
 	Group        string // The group that should own all deployed artifacts
-	Insecure     bool   // True if configuration was loaded from world-writable file
+	Insecure     bool   // True if configuration was loaded from insecure file
 	Scripts      map[string]sysCommand
 }
 

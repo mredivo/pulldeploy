@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"syscall"
 
 	"gopkg.in/yaml.v2"
 )
@@ -63,6 +64,32 @@ func findConfigDir() (string, error) {
 	}
 }
 
+// When running as root, configurations must be secure.
+func isInsecure(filepath string) bool {
+
+	isInsecure := false
+
+	if os.Geteuid() == 0 {
+		// Check whether the file is world writable.
+		if fi, err := os.Stat(filepath); err == nil {
+			if perm := fi.Mode().Perm(); perm&02 > 0 {
+				isInsecure = true
+			}
+			// Check file ownership. Note: fi.Sys() is non-portable.
+			if sys := fi.Sys(); sys != nil {
+				if sys.(*syscall.Stat_t).Uid != 0 {
+					isInsecure = true
+				}
+				if sys.(*syscall.Stat_t).Gid != 0 {
+					isInsecure = true
+				}
+			}
+		}
+	}
+
+	return isInsecure
+}
+
 // loadAppConfig loads the configuration for a client application.
 func loadAppConfig(configDir, appName string) (*AppConfig, error) {
 
@@ -79,13 +106,8 @@ func loadAppConfig(configDir, appName string) (*AppConfig, error) {
 		return nil, err
 	}
 
-	// Note whether the file is world writable.
-	appcfg.Insecure = false
-	if fi, err := os.Stat(appcfgfile); err == nil {
-		if perm := fi.Mode().Perm(); perm&02 > 0 {
-			appcfg.Insecure = true
-		}
-	}
+	// When running as root, configurations must be secure.
+	appcfg.Insecure = isInsecure(appcfgfile)
 
 	return appcfg, nil
 }
@@ -143,13 +165,8 @@ func LoadPulldeployConfig(configDir string) (PDConfig, []error) {
 		return nil, errs
 	}
 
-	// Note whether the file is world writable.
-	isInsecure := false
-	if fi, err := os.Stat(pdcfg.configFile); err == nil {
-		if perm := fi.Mode().Perm(); perm&02 > 0 {
-			isInsecure = true
-		}
-	}
+	// When running as root, configurations must be secure.
+	isInsecure := isInsecure(pdcfg.configFile)
 
 	// Validate the system-specific shell commands.
 	var allOK = true

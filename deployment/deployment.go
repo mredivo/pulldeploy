@@ -237,7 +237,7 @@ func (d *Deployment) Extract(version string) error {
 	// Ensure the extract command wasn't loaded from an insecure file.
 	if os.Geteuid() == 0 && d.acfg.Insecure {
 		return fmt.Errorf(
-			"Refusing to execute extract command from world-writable \"pulldeploy.yaml\" as root")
+			"Refusing to execute extract command from insecure \"pulldeploy.yaml\" as root")
 	}
 
 	// Create the version directory if it doesn't exist.
@@ -290,7 +290,7 @@ func (d *Deployment) Link(version string) error {
 func (d *Deployment) PostDeploy(version string) (string, error) {
 	if os.Geteuid() == 0 && d.cfg.Insecure {
 		return "", fmt.Errorf(
-			"Refusing to execute post-deploy command from world-writable %q configuration as root",
+			"Refusing to execute post-deploy command from insecure %q configuration as root",
 			d.appName)
 	}
 	if d.cfg.Scripts["postdeploy"].Cmd != "" {
@@ -304,7 +304,7 @@ func (d *Deployment) PostDeploy(version string) (string, error) {
 func (d *Deployment) PostRelease(version string) (string, error) {
 	if os.Geteuid() == 0 && d.cfg.Insecure {
 		return "", fmt.Errorf(
-			"Refusing to execute post-release command from world-writable %q configuration as root",
+			"Refusing to execute post-release command from insecure %q configuration as root",
 			d.appName)
 	}
 	if d.cfg.Scripts["postrelease"].Cmd != "" {
