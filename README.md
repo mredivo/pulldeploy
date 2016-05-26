@@ -5,15 +5,12 @@ deploys and releases those packages on their target hosts.
  
 ## Documentation
 
-[![GoDoc](https://godoc.org/github.com/mredivo/pulldeploy?status.svg)](https://godoc.org/github.com/mredivo/pulldeploy)
-
-## Status
-
-Operational, but not all features available yet.
+Project Wiki: https://github.com/mredivo/pulldeploy/wiki
+GoDoc: [![GoDoc](https://godoc.org/github.com/mredivo/pulldeploy?status.svg)](https://godoc.org/github.com/mredivo/pulldeploy)
 
 ## Features
 
-* Once daemon is installed, no further interaction with application hosts is required
+* After daemon is installed, no further interaction with application hosts is required
 * Artifact repository management can be automated in CI, or done from laptops
 * Artifact repository is normally in S3, but can reside elsewhere
 * Artifacts can be signed, and will not be deployed if HMAC checking fails
@@ -27,39 +24,40 @@ Operational, but not all features available yet.
 "I'm going to deploy a new version of the Foo application to the stage environment,
 and release it at 2:00pm. The artifact is already in the repository."
 
-## Synopsis
+## Developer Setup
+
+### Prerequisites
+
+* A working Go development environment rooted at $GOPATH
+* AWS credentials for access to S3, if using S3 for repository storage
+
+### Getting the Source
+
+In addition to the project source, you will also need any dependencies, such
+as the AWS libraries. There is also some user-specific configuration that
+must be generated. The following steps take care of all this:
 
 ```
-$ pulldeploy help
+mkdir -p $GOPATH/src/github.com/mredivo
+cd $GOPATH/src/github.com/mredivo
+git clone git@github.com:mredivo/pulldeploy.git
+cd pulldeploy
+make fetch
+make devenv
+```
 
-usage: pulldeploy <command> [<args>]
+### Building and Running
 
-Commands:
-
-    Help:
-        -h, help [<command>]
-        -v, version
-
-    Repository management:
-        pulldeploy initrepo -app=<app>
-        pulldeploy addenv   -app=<app> envname [envname envname ...]
-        pulldeploy rmenv    -app=<app> envname [envname envname ...]
-        pulldeploy set      -app=<app> -env=<env> [-keep=n]
-
-    Release management:
-        pulldeploy upload  -app=<app> -version=<version> [-disabled] <file>
-        pulldeploy enable  -app=<app> -version=<version>
-        pulldeploy disable -app=<app> -version=<version>
-        pulldeploy purge   -app=<app> -version=<version>
-        pulldeploy deploy  -app=<app> -version=<version> -env=<env>
-        pulldeploy release -app=<app> -version=<version> -env=<env> [host1, host2, ...]
-
-    Informational:
-        pulldeploy list
-        pulldeploy status -app=<app>
-        pulldeploy listhosts -app=<app> -env=<env>
-
-    Daemon:
-        pulldeploy daemon -env=<env> [-logfile=<logfilename>]
+To build the application:
 
 ```
+make
+```
+
+This build the application into the ./build directory, from where it can be executed:
+
+```
+./build/pulldeploy daemon -env=stage
+```
+
+See the Wiki for notes on installing PullDeploy in a production environment.

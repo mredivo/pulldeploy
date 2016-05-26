@@ -55,7 +55,7 @@ func (cmd *Listhosts) Exec() *Result {
 	sgnlr.Open()
 	defer sgnlr.Close()
 
-	// TODO: Offer a machine-readable format.
+	// Print the list.
 	fmt.Printf("Registered %q hosts in %q\n", cmd.appName, cmd.envName)
 	hr := sgnlr.GetRegistry()
 	var count int
