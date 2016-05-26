@@ -47,17 +47,18 @@ const kHMACSUFFIX = "hmac"
 
 // Deployment provides methods for manipulating local deployment files.
 type Deployment struct {
-	appName     string             // The name of the application
-	cfg         pdconfig.AppConfig // The deployment configuration
-	uid         int                // The numeric UID to own all files for this deployment
-	gid         int                // The numeric GID to own all files for this deployment
-	baseDir     string             // The derived top-level directory for this app's files
-	artifactDir string             // The derived subdirectory for fetched build artifacts
-	releaseDir  string             // The derived subdirectory for extracted build artifacts
+	appName     string                  // The name of the application
+	cfg         pdconfig.AppConfig      // The deployment configuration
+	acfg        pdconfig.ArtifactConfig // The Artifact Type configuration
+	uid         int                     // The numeric UID to own all files for this deployment
+	gid         int                     // The numeric GID to own all files for this deployment
+	baseDir     string                  // The derived top-level directory for this app's files
+	artifactDir string                  // The derived subdirectory for fetched build artifacts
+	releaseDir  string                  // The derived subdirectory for extracted build artifacts
 }
 
 // New returns a new Deployment.
-func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
+func New(appName string, pdcfg pdconfig.PDConfig, cfg *pdconfig.AppConfig) (*Deployment, error) {
 
 	d := new(Deployment)
 	d.cfg = *cfg
@@ -69,16 +70,15 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 	if appName == "" {
 		return nil, errors.New("Deployment initialization error: Appname is mandatory")
 	}
-	switch d.cfg.ArtifactType {
-	case "tar.gz":
-		// This is the only filetype currently supported.
-	case "":
-		return nil, errors.New("Deployment initialization error: ArtifactType is mandatory")
-	default:
-		return nil, errors.New("Deployment initialization error: invalid ArtifactType")
-	}
 	if d.cfg.BaseDir == "" {
 		return nil, errors.New("Deployment initialization error: BaseDir is mandatory")
+	}
+
+	// Validate the artifact type.
+	if ac, err := pdcfg.GetArtifactConfig(d.cfg.ArtifactType); err == nil {
+		d.acfg = *ac
+	} else {
+		return nil, fmt.Errorf("Deployment initialization error: invalid ArtifactType %q", d.cfg.ArtifactType)
 	}
 
 	// Derive the UID/GID from the username/groupname.
@@ -135,7 +135,7 @@ func New(appName string, cfg *pdconfig.AppConfig) (*Deployment, error) {
 func (d *Deployment) ArtifactPresent(version string) bool {
 
 	// Generate the filename, and check whether file already exists.
-	_, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	_, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	return exists
 }
 
@@ -146,7 +146,7 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 	defer rc.Close()
 
 	// Generate the filename, and check whether file already exists.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	if exists {
 		return fmt.Errorf("Artifact already exists: %s", artifactPath)
 	}
@@ -169,7 +169,7 @@ func (d *Deployment) WriteArtifact(version string, rc io.ReadCloser) error {
 func (d *Deployment) HMACPresent(version string) bool {
 
 	// Generate the filename, and check whether file already exists.
-	_, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	_, exists := makeHMACPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	return exists
 }
 
@@ -177,7 +177,7 @@ func (d *Deployment) HMACPresent(version string) bool {
 func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 
 	// Generate the filename, write to file, set ownership.
-	hmacPath, _ := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	hmacPath, _ := makeHMACPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	if err := ioutil.WriteFile(hmacPath, hmac, 0664); err != nil {
 		return fmt.Errorf("Error while writing %q: %s", hmacPath, err.Error())
 	}
@@ -193,11 +193,11 @@ func (d *Deployment) WriteHMAC(version string, hmac []byte) error {
 func (d *Deployment) CheckHMAC(version string) error {
 
 	// Build the filenames.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	if !exists {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
-	hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	if !exists {
 		return fmt.Errorf("HMAC does not exist: %s", artifactPath)
 	}
@@ -230,7 +230,7 @@ func (d *Deployment) CheckHMAC(version string) error {
 func (d *Deployment) Extract(version string) error {
 
 	// Ensure that the artifact to be extracted exists.
-	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType)
+	artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 	if !exists {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
@@ -243,13 +243,21 @@ func (d *Deployment) Extract(version string) error {
 		}
 	}
 
-	// Extract the archive into the version directory.
-	// TODO: Move the /bin/tar command to the configuration
-	tarcmd := "/bin/tar" // Linux
-	if _, err := os.Stat(tarcmd); os.IsNotExist(err) {
-		tarcmd = "/usr/bin/tar" // Mac
+	// Build the argument list for the extract command.
+	var extractArgs = make([]string, 0)
+	for _, s := range d.acfg.Extract.Args {
+		switch s {
+		case "#ARTIFACTPATH#":
+			extractArgs = append(extractArgs, artifactPath)
+		case "#VERSIONDIR#":
+			extractArgs = append(extractArgs, versionDir)
+		default:
+			extractArgs = append(extractArgs, s)
+		}
 	}
-	cmd := exec.Command(tarcmd, "zxf", artifactPath, "-C", versionDir)
+
+	// Extract the archive into the version directory.
+	cmd := exec.Command(d.acfg.Extract.Cmd, extractArgs...)
 	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Cannot extract archive %q into %q: %s", artifactPath, versionDir, err.Error())
@@ -301,10 +309,10 @@ func (d *Deployment) Remove(version string) error {
 	}
 
 	// Remove the artifact and HMAC.
-	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType); exists {
+	if artifactPath, exists := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension); exists {
 		os.Remove(artifactPath)
 	}
-	if hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.cfg.ArtifactType); exists {
+	if hmacPath, exists := makeHMACPath(d.artifactDir, d.appName, version, d.acfg.Extension); exists {
 		os.Remove(hmacPath)
 	}
 

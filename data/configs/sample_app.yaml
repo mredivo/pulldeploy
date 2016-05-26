@@ -1,6 +1,6 @@
 description: "Sample Application"
 secret: "2fe52f3a6b4cff75495c8b1575d6d274"
-artifacttype: "tar.gz"
+artifacttype: "tgz"
 basedir: "PROJECTDIR/data/client"
 user: "nobody"
 group: "nobody"

@@ -97,7 +97,7 @@ func (cmd *Daemon) Exec() *Result {
 			}
 
 			// Instantiate the deployment object for this application.
-			dplmt, err := deployment.New(appName, appCfg)
+			dplmt, err := deployment.New(appName, cmd.pdcfg, appCfg)
 			if err != nil {
 				cmd.lw.Error("Error in deployment for %q: %s", appName, err.Error())
 				continue
@@ -177,8 +177,17 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 		return
 	}
 
+	// Get the extension for the artifact type.
+	var extension string
+	if ac, err := cmd.pdcfg.GetArtifactConfig(appCfg.ArtifactType); err == nil {
+		extension = ac.Extension
+	} else {
+		cmd.lw.Error("Invalid ArtifactType for %q: %q", an.Appname, appCfg.ArtifactType)
+		return
+	}
+
 	// Instantiate the deployment object for this application.
-	dplmt, err := deployment.New(an.Appname, appCfg)
+	dplmt, err := deployment.New(an.Appname, cmd.pdcfg, appCfg)
 	if err != nil {
 		cmd.lw.Error("Error in deployment for %q: %s", an.Appname, err.Error())
 		return
@@ -213,7 +222,7 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			for _, version := range newDeployments {
 
 				// Determine the base filename.
-				filename := ri.ArtifactFilename(version, appCfg.ArtifactType)
+				filename := ri.ArtifactFilename(version, extension)
 
 				// Retrieve the artifact for that filename.
 				if !dplmt.ArtifactPresent(version) {

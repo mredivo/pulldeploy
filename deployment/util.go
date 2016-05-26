@@ -30,8 +30,8 @@ func sysCommand(curDir string, command string, args []string) (string, string, s
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Run()
-	text := command + " " + strings.Join(args, " ")
-	return text, curDir, strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String())
+	cmdline := command + " " + strings.Join(args, " ")
+	return cmdline, curDir, strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String())
 }
 
 // Utility helper to create a directory and set its owner.

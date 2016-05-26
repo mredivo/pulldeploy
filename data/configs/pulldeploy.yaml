@@ -21,3 +21,37 @@ signaller:
         basenode: "/pulldeploy" # The path to the parent of all Zookeeper nodes
         servers:                # Zookeeper servers: array of host[:port]
             - "127.0.0.1:2181"
+
+artifacttypes:
+    tar:
+        extension: "tar"
+        extract:
+            cmd: "/usr/bin/tar"
+            args:
+                - "xf"
+                - "#ARTIFACTPATH#"
+                - "-C"
+                - "#VERSIONDIR#"
+    tgz:
+        extension: "tar.gz"
+        extract:
+            cmd: "/usr/bin/tar"
+            args:
+                - "zxf"
+                - "#ARTIFACTPATH#"
+                - "-C"
+                - "#VERSIONDIR#"
+    tbz2:
+        extension: "tar.bz2"
+        extract:
+            cmd: "/usr/bin/tar"
+            args:
+                - "jxf"
+                - "#ARTIFACTPATH#"
+                - "-C"
+                - "#VERSIONDIR#"
+    rpm:
+        extension: "rpm"
+        extract:
+            cmd: ""
+            args:

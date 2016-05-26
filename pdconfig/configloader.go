@@ -18,13 +18,14 @@ const kCONFIG_APP_EXT = ".yaml"            // Filename extension for application
 
 // The configuration as read in.
 type pdConfig struct {
-	configDir    string                // Invisible to YAML decoder, determined at runtime
-	configFile   string                // Invisible to YAML decoder, determined at runtime
-	appList      map[string]*AppConfig // Invisible to YAML decoder, loaded separately
-	LogLevel     string                // The level at which to log: debug|info|warn|error
-	AccessMethod string                // One of the KST_* AccessMethod constants
-	Storage      map[string]map[string]string
-	Signaller    SignallerConfig
+	configDir     string                // Invisible to YAML decoder, determined at runtime
+	configFile    string                // Invisible to YAML decoder, determined at runtime
+	appList       map[string]*AppConfig // Invisible to YAML decoder, loaded separately
+	LogLevel      string                // The level at which to log: debug|info|warn|error
+	AccessMethod  string                // One of the KST_* AccessMethod constants
+	Storage       map[string]map[string]string
+	Signaller     SignallerConfig
+	ArtifactTypes map[string]ArtifactConfig
 }
 
 // findConfigDir enables use of a developer-specific configuration directory.
@@ -131,6 +132,22 @@ func LoadPulldeployConfig(configDir string) (PDConfig, []error) {
 		errs = append(errs, fmt.Errorf(
 			"Unable to read configuration file %q: %s",
 			pdcfg.configFile, err.Error()))
+		return nil, errs
+	}
+
+	// Validate the system-specific shell commands.
+	var allOK = true
+	for atype, acfg := range pdcfg.ArtifactTypes {
+		if acfg.Extract.Cmd != "" {
+			if _, err := os.Stat(acfg.Extract.Cmd); os.IsNotExist(err) {
+				errs = append(errs, fmt.Errorf(
+					"ArtifactType %q extract command error: %s",
+					atype, err.Error()))
+				allOK = false
+			}
+		}
+	}
+	if !allOK {
 		return nil, errs
 	}
 

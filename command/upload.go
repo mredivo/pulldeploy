@@ -2,6 +2,7 @@ package command
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/mredivo/pulldeploy/deployment"
@@ -74,6 +75,15 @@ func (cmd *Upload) Exec() *Result {
 		return cmd.result
 	}
 
+	// Get the extension for the artifact type.
+	var extension string
+	if ac, err := cmd.pdcfg.GetArtifactConfig(appCfg.ArtifactType); err == nil {
+		extension = ac.Extension
+	} else {
+		cmd.result.AppendError(fmt.Errorf("Invalid ArtifactType for app: %q", appCfg.ArtifactType))
+		return cmd.result
+	}
+
 	// Retrieve the repository index.
 	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
 
@@ -89,7 +99,7 @@ func (cmd *Upload) Exec() *Result {
 			}
 
 			// Write the artifact to the repo.
-			repoFilename := ri.ArtifactFilename(cmd.appVersion, appCfg.ArtifactType)
+			repoFilename := ri.ArtifactFilename(cmd.appVersion, extension)
 			repoPath := ri.ArtifactPath(repoFilename)
 			if err := stg.PutReader(repoPath, fh, fi.Size()); err != nil {
 				cmd.result.AppendError(err)

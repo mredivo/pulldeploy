@@ -24,9 +24,15 @@ type StorageConfig struct {
 	Params       map[string]string // Type-specific parameters
 }
 
-type postCommand struct {
+type sysCommand struct {
 	Cmd  string
 	Args []string
+}
+
+// ArtifactConfig defines the valid artifact types and how to unpack them.
+type ArtifactConfig struct {
+	Extension string     // The filename extension to use for this artifact type
+	Extract   sysCommand // The command used to unpack this artifact type
 }
 
 // AppConfig contains the definition of each PullDeploy client application,
@@ -38,7 +44,7 @@ type AppConfig struct {
 	BaseDir      string // The base directory of the deployment on the app server
 	User         string // The user that should own all deployed artifacts
 	Group        string // The group that should own all deployed artifacts
-	Scripts      map[string]postCommand
+	Scripts      map[string]sysCommand
 }
 
 // The definition of the configuration object shared throughout PullDeploy.
@@ -47,6 +53,7 @@ type PDConfig interface {
 	GetVersionInfo() *VersionInfo
 	GetSignallerConfig() *SignallerConfig
 	GetStorageConfig() *StorageConfig
+	GetArtifactConfig(artifactType string) (*ArtifactConfig, error)
 	GetAppConfig(appName string) (*AppConfig, error)
 	GetAppList() map[string]*AppConfig
 	RefreshAppList() []error
@@ -81,6 +88,23 @@ func (pdcfg *pdConfig) GetStorageConfig() *StorageConfig {
 		sc.Params = make(map[string]string)
 	}
 	return sc
+}
+
+// GetArtifactConfig returns a client application configuration.
+func (pdcfg *pdConfig) GetArtifactConfig(artifactType string) (*ArtifactConfig, error) {
+
+	var artifactConfig ArtifactConfig
+	if ac, found := pdcfg.ArtifactTypes[artifactType]; found {
+		if ac.Extract.Cmd != "" {
+			// It passed validation.
+			artifactConfig = ac
+			return &artifactConfig, nil
+		} else {
+			return nil, fmt.Errorf("Incomplete configuration for artifact type %q", artifactType)
+		}
+	} else {
+		return nil, fmt.Errorf("No configuration for artifact type %q", artifactType)
+	}
 }
 
 // GetAppConfig returns a client application configuration.

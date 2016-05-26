@@ -3,10 +3,62 @@ package deployment
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 )
+
+// Provide a dummy configuration.
+type mypdConfig struct{}
+
+var pdcfg *mypdConfig
+
+func (p *mypdConfig) GetArtifactConfig(artifactType string) (*pdconfig.ArtifactConfig, error) {
+	var ac pdconfig.ArtifactConfig
+	ac.Extension = "tar.gz"
+	switch runtime.GOOS {
+	case "darwin":
+		ac.Extract.Cmd = "/usr/bin/tar"
+	default:
+		ac.Extract.Cmd = "/bin/tar"
+	}
+	ac.Extract.Args = []string{"zxf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#"}
+	return &ac, nil
+}
+
+func (p *mypdConfig) GetAppConfig(appName string) (*pdconfig.AppConfig, error) {
+	var appConfig pdconfig.AppConfig
+	return &appConfig, nil
+}
+
+func (p *mypdConfig) GetAppList() map[string]*pdconfig.AppConfig {
+	return make(map[string]*pdconfig.AppConfig)
+}
+
+func (p *mypdConfig) GetLogLevel() string {
+	return "debug"
+}
+
+func (p *mypdConfig) GetSignallerConfig() *pdconfig.SignallerConfig {
+	var signaller pdconfig.SignallerConfig
+	return &signaller
+}
+
+func (p *mypdConfig) GetStorageConfig() *pdconfig.StorageConfig {
+	var sc pdconfig.StorageConfig
+	return &sc
+}
+
+func (p *mypdConfig) GetVersionInfo() *pdconfig.VersionInfo {
+	var versionInfo pdconfig.VersionInfo
+	return &versionInfo
+}
+
+func (p *mypdConfig) RefreshAppList() []error {
+	var errs []error = make([]error, 0)
+	return errs
+}
 
 func TestDeploymentOperations(t *testing.T) {
 
@@ -21,35 +73,35 @@ func TestDeploymentOperations(t *testing.T) {
 
 	// Test the failure modes.
 	appcfg := &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz"}
-	if _, err := New(TESTAPP, appcfg); err == nil {
+	if _, err := New(TESTAPP, pdcfg, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing root dir")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/nosuchdir"}
-	if _, err := New("", appcfg); err == nil {
+	if _, err := New("", pdcfg, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with missing appname")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "/"}
-	if _, err := New(TESTAPP, appcfg); err == nil {
+	if _, err := New(TESTAPP, pdcfg, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root dir \"/\"")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "/foo"}
-	if _, err := New(TESTAPP, appcfg); err == nil {
+	if _, err := New(TESTAPP, pdcfg, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with root path too short")
 	} else {
 		fmt.Println(err.Error())
 	}
 
 	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/nosuchdir"}
-	if _, err := New(TESTAPP, appcfg); err == nil {
+	if _, err := New(TESTAPP, pdcfg, appcfg); err == nil {
 		t.Errorf("Deployment initialization succeeded with bad root dir")
 	} else {
 		fmt.Println(err.Error())
@@ -57,7 +109,7 @@ func TestDeploymentOperations(t *testing.T) {
 
 	// Create a Deployment for further testing.
 	appcfg = &pdconfig.AppConfig{Secret: secret, ArtifactType: "tar.gz", BaseDir: "../data/client"}
-	dep, err := New(TESTAPP, appcfg)
+	dep, err := New(TESTAPP, pdcfg, appcfg)
 	if err != nil {
 		t.Errorf("Deployment initialization failed: %s", err.Error())
 	}
