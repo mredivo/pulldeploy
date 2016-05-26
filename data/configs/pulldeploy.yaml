@@ -27,29 +27,17 @@ artifacttypes:
         extension: "tar"
         extract:
             cmd: "/usr/bin/tar"
-            args:
-                - "xf"
-                - "#ARTIFACTPATH#"
-                - "-C"
-                - "#VERSIONDIR#"
+            args: [ "xf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#" ]
     tgz:
         extension: "tar.gz"
         extract:
             cmd: "/usr/bin/tar"
-            args:
-                - "zxf"
-                - "#ARTIFACTPATH#"
-                - "-C"
-                - "#VERSIONDIR#"
+            args: [ "zxf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#" ]
     tbz2:
         extension: "tar.bz2"
         extract:
             cmd: "/usr/bin/tar"
-            args:
-                - "jxf"
-                - "#ARTIFACTPATH#"
-                - "-C"
-                - "#VERSIONDIR#"
+            args: [ "jxf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#" ]
     rpm:
         extension: "rpm"
         extract:
