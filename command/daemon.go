@@ -261,16 +261,22 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 				}
 
 				// Compare the calculated HMAC with the retrieved HMAC.
-				if err := dplmt.CheckHMAC(version); err != nil {
+				if err := dplmt.CheckHMAC(version); err == nil {
+					cmd.lw.Debug("HMAC comparison succeeded for %s in %s, version %q",
+						an.Appname, cmd.envName, version)
+				} else {
 					cmd.lw.Error("HMAC comparison FAILED for %s in %s, version %q",
 						an.Appname, cmd.envName, version)
 					continue
 				}
 
 				// Extract the artifact to the release directory.
-				if err := dplmt.Extract(version); err != nil {
-					cmd.lw.Error("Extract FAILED for %s in %s, version %q",
-						an.Appname, cmd.envName, version)
+				if err := dplmt.Extract(version); err == nil {
+					cmd.lw.Debug("Extracted version %q for %s in %s",
+						version, cmd.envName, an.Appname)
+				} else {
+					cmd.lw.Error("Extract FAILED for %s in %s, version %q: %s",
+						an.Appname, cmd.envName, version, err.Error())
 					continue
 				}
 
@@ -306,22 +312,11 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 	}
 }
 
-func (cmd *Daemon) logPostCommand(command, curdir, stdout, stderr string) {
-	if command != "" {
-		if stdout == "" {
-			if stderr == "" {
-				cmd.lw.Info("Executed %q in %s", command, curdir)
-			} else {
-				cmd.lw.Info("Executed %q in %s\nstderr=%q", command, curdir, stderr)
-				cmd.lw.Warn(stderr)
-			}
-		} else {
-			if stderr == "" {
-				cmd.lw.Info("Executed %q in %s\nstdout=%q", command, curdir, stdout)
-			} else {
-				cmd.lw.Info("Executed %q in %s\nstdout=%q\nstderr=%q", command, curdir, stdout, stderr)
-				cmd.lw.Warn(stderr)
-			}
+func (cmd *Daemon) logPostCommand(cmdline string, err error) {
+	if cmdline != "" {
+		cmd.lw.Info(cmdline)
+		if err != nil {
+			cmd.lw.Warn(err.Error())
 		}
 	}
 }

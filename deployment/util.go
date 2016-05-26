@@ -22,16 +22,54 @@ func absPath(candidate string) string {
 }
 
 // Utility helper to execute a system command.
-func sysCommand(curDir string, command string, args []string) (string, string, string, string) {
+func sysCommand(curDir string, command string, args []string) (string, error) {
+
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
+
 	cmd := exec.Command(command, args...)
-	cmd.Dir = curDir
+	if curDir != "" {
+		cmd.Dir = curDir
+	} else {
+		curDir, _ = os.Getwd()
+	}
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	cmd.Run()
+
+	err := cmd.Run()
+
+	// Format the results for easy logging.
+	var logLine string
+	var logErr error
 	cmdline := command + " " + strings.Join(args, " ")
-	return cmdline, curDir, strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String())
+	if stdout.Len() == 0 {
+		if stderr.Len() == 0 {
+			logLine = fmt.Sprintf("Executed %q in %s", cmdline, curDir)
+		} else {
+			logLine = fmt.Sprintf("Executed %q in %s\nstderr=%q", cmdline, curDir,
+				strings.TrimSpace(stderr.String()))
+			if err != nil {
+				logErr = fmt.Errorf("%s: %s", err.Error(), strings.TrimSpace(stderr.String()))
+			} else {
+				logErr = fmt.Errorf(strings.TrimSpace(stderr.String()))
+			}
+		}
+	} else {
+		if stderr.Len() == 0 {
+			logLine = fmt.Sprintf("Executed %q in %s\nstdout=%q", cmdline, curDir,
+				strings.TrimSpace(stdout.String()))
+		} else {
+			logLine = fmt.Sprintf("Executed %q in %s\nstdout=%q\nstderr=%q", cmdline, curDir,
+				strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()))
+			if err != nil {
+				logErr = fmt.Errorf("%s: %s", err.Error(), strings.TrimSpace(stderr.String()))
+			} else {
+				logErr = fmt.Errorf(strings.TrimSpace(stderr.String()))
+			}
+		}
+	}
+
+	return logLine, logErr
 }
 
 // Utility helper to create a directory and set its owner.

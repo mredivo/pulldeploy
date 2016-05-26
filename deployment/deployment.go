@@ -31,7 +31,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"strconv"
@@ -257,8 +256,7 @@ func (d *Deployment) Extract(version string) error {
 	}
 
 	// Extract the archive into the version directory.
-	cmd := exec.Command(d.acfg.Extract.Cmd, extractArgs...)
-	err := cmd.Run()
+	_, err := sysCommand("", d.acfg.Extract.Cmd, extractArgs)
 	if err != nil {
 		return fmt.Errorf("Cannot extract archive %q into %q: %s", artifactPath, versionDir, err.Error())
 	}
@@ -283,21 +281,21 @@ func (d *Deployment) Link(version string) error {
 }
 
 // PostDeploy executes the configured PostDeploy command.
-func (d *Deployment) PostDeploy(version string) (string, string, string, string) {
+func (d *Deployment) PostDeploy(version string) (string, error) {
 	if d.cfg.Scripts["postdeploy"].Cmd != "" {
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
 		return sysCommand(versionDir, d.cfg.Scripts["postdeploy"].Cmd, d.cfg.Scripts["postdeploy"].Args)
 	}
-	return "", "", "", ""
+	return "", nil
 }
 
 // PostRelease executes the configured PostRelease command.
-func (d *Deployment) PostRelease(version string) (string, string, string, string) {
+func (d *Deployment) PostRelease(version string) (string, error) {
 	if d.cfg.Scripts["postrelease"].Cmd != "" {
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
 		return sysCommand(versionDir, d.cfg.Scripts["postrelease"].Cmd, d.cfg.Scripts["postrelease"].Args)
 	}
-	return "", "", "", ""
+	return "", nil
 }
 
 // Remove deletes everything associated with the given name.
