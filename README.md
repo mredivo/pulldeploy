@@ -5,8 +5,8 @@ deploys and releases those packages on their target hosts.
  
 ## Documentation
 
-Project Wiki: https://github.com/mredivo/pulldeploy/wiki
-GoDoc: [![GoDoc](https://godoc.org/github.com/mredivo/pulldeploy?status.svg)](https://godoc.org/github.com/mredivo/pulldeploy)
+* Project Wiki: https://github.com/mredivo/pulldeploy/wiki
+* GoDoc: [![GoDoc](https://godoc.org/github.com/mredivo/pulldeploy?status.svg)](https://godoc.org/github.com/mredivo/pulldeploy)
 
 ## Features
 
@@ -54,10 +54,11 @@ To build the application:
 make
 ```
 
-This build the application into the ./build directory, from where it can be executed:
+This builds the application into the ./build directory, from where it can be executed:
 
 ```
 ./build/pulldeploy daemon -env=stage
 ```
 
-See the Wiki for notes on installing PullDeploy in a production environment.
+* See the Wiki for notes on installing PullDeploy in a production environment.
+* See the GoDocs for a command line synopsis, or execute `./build/pulldeploy help`
