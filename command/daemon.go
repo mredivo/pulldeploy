@@ -81,7 +81,7 @@ func (cmd *Daemon) Exec() *Result {
 
 	// Determine the local hostname.
 	cmd.myHostname, _ = os.Hostname()
-	cmd.lw.Info("Registering host name %q", cmd.myHostname)
+	cmd.lw.Info("Host name: %q", cmd.myHostname)
 
 	// Get the set of applications to monitor.
 	appList := cmd.pdcfg.GetAppList()
