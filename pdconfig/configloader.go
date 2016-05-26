@@ -79,6 +79,14 @@ func loadAppConfig(configDir, appName string) (*AppConfig, error) {
 		return nil, err
 	}
 
+	// Note whether the file is world writable.
+	appcfg.Insecure = false
+	if fi, err := os.Stat(appcfgfile); err == nil {
+		if perm := fi.Mode().Perm(); perm&02 > 0 {
+			appcfg.Insecure = true
+		}
+	}
+
 	return appcfg, nil
 }
 
@@ -135,6 +143,14 @@ func LoadPulldeployConfig(configDir string) (PDConfig, []error) {
 		return nil, errs
 	}
 
+	// Note whether the file is world writable.
+	isInsecure := false
+	if fi, err := os.Stat(pdcfg.configFile); err == nil {
+		if perm := fi.Mode().Perm(); perm&02 > 0 {
+			isInsecure = true
+		}
+	}
+
 	// Validate the system-specific shell commands.
 	var allOK = true
 	for atype, acfg := range pdcfg.ArtifactTypes {
@@ -145,6 +161,10 @@ func LoadPulldeployConfig(configDir string) (PDConfig, []error) {
 					atype, err.Error()))
 				allOK = false
 			}
+		}
+		if isInsecure {
+			acfg.Insecure = isInsecure
+			pdcfg.ArtifactTypes[atype] = acfg
 		}
 	}
 	if !allOK {

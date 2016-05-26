@@ -234,6 +234,12 @@ func (d *Deployment) Extract(version string) error {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
 
+	// Ensure the extract command wasn't loaded from an insecure file.
+	if os.Geteuid() == 0 && d.acfg.Insecure {
+		return fmt.Errorf(
+			"Refusing to execute extract command from world-writable \"pulldeploy.yaml\" as root")
+	}
+
 	// Create the version directory if it doesn't exist.
 	versionDir, exists := makeReleasePath(d.releaseDir, version)
 	if !exists {
@@ -282,6 +288,11 @@ func (d *Deployment) Link(version string) error {
 
 // PostDeploy executes the configured PostDeploy command.
 func (d *Deployment) PostDeploy(version string) (string, error) {
+	if os.Geteuid() == 0 && d.cfg.Insecure {
+		return "", fmt.Errorf(
+			"Refusing to execute post-deploy command from world-writable %q configuration as root",
+			d.appName)
+	}
 	if d.cfg.Scripts["postdeploy"].Cmd != "" {
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
 		return sysCommand(versionDir, d.cfg.Scripts["postdeploy"].Cmd, d.cfg.Scripts["postdeploy"].Args)
@@ -291,6 +302,11 @@ func (d *Deployment) PostDeploy(version string) (string, error) {
 
 // PostRelease executes the configured PostRelease command.
 func (d *Deployment) PostRelease(version string) (string, error) {
+	if os.Geteuid() == 0 && d.cfg.Insecure {
+		return "", fmt.Errorf(
+			"Refusing to execute post-release command from world-writable %q configuration as root",
+			d.appName)
+	}
 	if d.cfg.Scripts["postrelease"].Cmd != "" {
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
 		return sysCommand(versionDir, d.cfg.Scripts["postrelease"].Cmd, d.cfg.Scripts["postrelease"].Args)

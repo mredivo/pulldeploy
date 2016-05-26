@@ -315,8 +315,8 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 func (cmd *Daemon) logPostCommand(cmdline string, err error) {
 	if cmdline != "" {
 		cmd.lw.Info(cmdline)
-		if err != nil {
-			cmd.lw.Warn(err.Error())
-		}
+	}
+	if err != nil {
+		cmd.lw.Warn(err.Error())
 	}
 }
