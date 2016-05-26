@@ -8,9 +8,6 @@ import (
 	"testing"
 )
 
-// TODO: Read doS3Tests from a configuration file
-var doS3Tests = true
-
 const TESTAPP = "stubapp"
 
 func TestStorage(t *testing.T) {
@@ -66,18 +63,20 @@ func TestStorage(t *testing.T) {
 	}
 
 	// Set up our S3 base directory, and run tests.
-	params["awsregion"] = "us-east-1"
-	params["bucket"] = "change-pulldeploy-test"
-	params["prefix"] = "unittest"
-	if rs, err = New(KST_S3, params); err != nil {
-		t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
-	}
-	if doS3Tests {
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+		params["awsregion"] = "us-east-1"
+		params["bucket"] = "change-pulldeploy-test"
+		params["prefix"] = "unittest"
+		if rs, err = New(KST_S3, params); err != nil {
+			t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
+		}
 		testStorage(t, KST_S3, rs)
 	}
 }
 
 func testStorage(t *testing.T, am AccessMethod, rs Storage) {
+
+	fmt.Printf("Testing storage with Access Method %q\n", am)
 
 	sampleBytes := []byte("This is sample repository data.\n")
 	sampleFilename1 := "/" + TESTAPP + "/method_a/sampledata.txt"
