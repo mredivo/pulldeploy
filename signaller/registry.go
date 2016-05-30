@@ -42,7 +42,9 @@ func (hr *Registry) Register(envName, appName, hostName, version string) {
 		acl := zk.WorldACL(zk.PermAll)
 		registryPath := hr.makeRegistryPath(envName, appName, hostName)
 		hr.sgnlr.makeParentNodes(registryPath)
-		zkConn.Create(registryPath, []byte(version), flags, acl)
+		if _, err := zkConn.Create(registryPath, []byte(version), flags, acl); err != nil {
+			zkConn.Set(registryPath, []byte(version), -1)
+		}
 	}
 }
 

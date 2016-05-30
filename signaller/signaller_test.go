@@ -26,7 +26,7 @@ func withZookeeper(t *testing.T) {
 	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 
-	testSignalling(t, sgnlr, notifChan)
+	testSignalling(t, sgnlr, notifChan, "with")
 }
 
 func withoutZookeeper(t *testing.T) {
@@ -40,10 +40,10 @@ func withoutZookeeper(t *testing.T) {
 	notifChan := sgnlr.Open()
 	defer sgnlr.Close()
 
-	testSignalling(t, sgnlr, notifChan)
+	testSignalling(t, sgnlr, notifChan, "without")
 }
 
-func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notification) {
+func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notification, mode string) {
 
 	// The conditions we are checking for.
 	var eIsZK, eConnected, eDisconnected, eNotified bool
@@ -86,13 +86,40 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 	sgnlr.Notify("prod", "myapp", []byte("My, what big teeth you have, granny!"))
 
 	// Exercise the registry.
-	hr := sgnlr.GetRegistry()
-	hr.Register("prod", "myapp", "clienthost-1", "1.1.1")
-	hr.Register("prod", "myapp", "clienthost-2", "1.1.1")
-	hr.Register("prod", "myapp", "clienthost-3", "1.1.1")
-	dumpRegistryInfo(hr.Hosts("prod", "myapp"))
-	hr.Unregister("prod", "myapp", "clienthost-2")
-	dumpRegistryInfo(hr.Hosts("prod", "myapp"))
+	if mode == "with" {
+		hr := sgnlr.GetRegistry()
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.1")
+		hr.Register("prod", "myapp", "clienthost-2", "1.1.1")
+		hr.Register("prod", "myapp", "clienthost-3", "1.1.1")
+		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 3 {
+			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 3)
+		}
+		hr.Unregister("prod", "myapp", "clienthost-2")
+		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 2 {
+			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
+		}
+		// Update an entry (twice).
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.2")
+		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 2 {
+			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
+		}
+		for _, v := range hr.Hosts("prod", "myapp") {
+			if v.Hostname == "clienthost-1" && v.AppVersion != "1.1.2" {
+				t.Errorf("Wrong version for registered host %s: have %s, expected %s",
+					v.Hostname, v.AppVersion, "1.1.2")
+			}
+		}
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.3")
+		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 2 {
+			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
+		}
+		for _, v := range hr.Hosts("prod", "myapp") {
+			if v.Hostname == "clienthost-1" && v.AppVersion != "1.1.3" {
+				t.Errorf("Wrong version for registered host %s: have %s, expected %s",
+					v.Hostname, v.AppVersion, "1.1.3")
+			}
+		}
+	}
 
 	// Block until all messages arrive, or there's a timeout.
 	unittestWG.Wait()
@@ -115,9 +142,12 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 	unittestMutex.Unlock()
 }
 
-func dumpRegistryInfo(ri []RegistryInfo) {
+func dumpRegistryInfo(ri []RegistryInfo) int {
+	count := 0
 	fmt.Printf("Registry contents: %v\n", ri)
 	for _, v := range ri {
 		fmt.Printf("   Host: %q Env: %q App: %q Version: %q\n", v.Hostname, v.Envname, v.Appname, v.AppVersion)
+		count++
 	}
+	return count
 }
