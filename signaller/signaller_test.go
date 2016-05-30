@@ -2,6 +2,7 @@ package signaller
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -88,9 +89,9 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 	// Exercise the registry.
 	if mode == "with" {
 		hr := sgnlr.GetRegistry()
-		hr.Register("prod", "myapp", "clienthost-1", "1.1.1")
-		hr.Register("prod", "myapp", "clienthost-2", "1.1.1")
-		hr.Register("prod", "myapp", "clienthost-3", "1.1.1")
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.1", []string{})
+		hr.Register("prod", "myapp", "clienthost-2", "1.1.1", []string{})
+		hr.Register("prod", "myapp", "clienthost-3", "1.1.1", []string{"1.1.1"})
 		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 3 {
 			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 3)
 		}
@@ -99,7 +100,7 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
 		}
 		// Update an entry (twice).
-		hr.Register("prod", "myapp", "clienthost-1", "1.1.2")
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.2", []string{"1.1.1", "1.1.2"})
 		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 2 {
 			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
 		}
@@ -109,7 +110,7 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 					v.Hostname, v.AppVersion, "1.1.2")
 			}
 		}
-		hr.Register("prod", "myapp", "clienthost-1", "1.1.3")
+		hr.Register("prod", "myapp", "clienthost-1", "1.1.3", []string{"1.1.1", "1.1.2", "1.1.3"})
 		if count := dumpRegistryInfo(hr.Hosts("prod", "myapp")); count != 2 {
 			t.Errorf("Wrong number of registered hosts: have %d, expected %d", count, 2)
 		}
@@ -144,9 +145,10 @@ func testSignalling(t *testing.T, sgnlr *Signaller, notifChan <-chan Notificatio
 
 func dumpRegistryInfo(ri []RegistryInfo) int {
 	count := 0
-	fmt.Printf("Registry contents: %v\n", ri)
+	fmt.Printf("Registry contents:\n")
 	for _, v := range ri {
-		fmt.Printf("   Host: %q Env: %q App: %q Version: %q\n", v.Hostname, v.Envname, v.Appname, v.AppVersion)
+		fmt.Printf("   Host: %q Env: %q App: %q Version: %q Deployed: %s\n",
+			v.Hostname, v.Envname, v.Appname, v.AppVersion, strings.Join(v.Deployed, ", "))
 		count++
 	}
 	return count

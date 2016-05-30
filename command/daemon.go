@@ -104,7 +104,8 @@ func (cmd *Daemon) Exec() *Result {
 			}
 
 			// Register with current version, and ask for notifications.
-			cmd.hr.Register(cmd.envName, appName, cmd.myHostname, dplmt.GetCurrentLink())
+			cmd.hr.Register(cmd.envName, appName, cmd.myHostname,
+				dplmt.GetCurrentLink(), dplmt.GetDeployedVersions())
 			sgnlr.Monitor(cmd.envName, appName)
 		}
 	}
@@ -282,6 +283,8 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 
 				// Execute the post-deploy command.
 				cmd.logPostCommand(dplmt.PostDeploy(version))
+				cmd.hr.Register(cmd.envName, an.Appname, cmd.myHostname,
+					dplmt.GetCurrentLink(), dplmt.GetDeployedVersions())
 			}
 
 			// Determine the currently released version on the local host, and
@@ -295,8 +298,8 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 						an.Appname, cmd.envName, currentRelease)
 					// Execute the post-release command.
 					cmd.logPostCommand(dplmt.PostRelease(currentRelease))
-					cmd.hr.Unregister(cmd.envName, an.Appname, cmd.myHostname)
-					cmd.hr.Register(cmd.envName, an.Appname, cmd.myHostname, dplmt.GetCurrentLink())
+					cmd.hr.Register(cmd.envName, an.Appname, cmd.myHostname,
+						dplmt.GetCurrentLink(), dplmt.GetDeployedVersions())
 				} else {
 					cmd.lw.Error("Error setting current release for %s in %s to %q: %s",
 						an.Appname, cmd.envName, currentRelease, err.Error())

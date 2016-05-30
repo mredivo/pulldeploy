@@ -3,6 +3,7 @@ package command
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/signaller"
@@ -60,7 +61,7 @@ func (cmd *Listhosts) Exec() *Result {
 	hr := sgnlr.GetRegistry()
 	var count int
 	for _, v := range hr.Hosts(cmd.envName, cmd.appName) {
-		fmt.Printf("   Host: %q Version: %q\n", v.Hostname, v.AppVersion)
+		fmt.Printf("   Host: %q Version: %q Deployed: %v\n", v.Hostname, v.AppVersion, strings.Join(v.Deployed, ", "))
 		count++
 	}
 	if count == 1 {
