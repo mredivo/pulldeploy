@@ -209,7 +209,7 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			}
 
 			// Determine whether any new versions have been deployed since we last checked.
-			localVersionList := dplmt.ListVersions()
+			localVersionList := dplmt.GetDeployedVersions()
 			var deployedVersionList []string
 			for _, v := range env.Deployed {
 				deployedVersionList = append(deployedVersionList, v.Version)
