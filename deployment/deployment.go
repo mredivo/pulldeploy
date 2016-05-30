@@ -352,8 +352,8 @@ func (d *Deployment) GetCurrentLink() string {
 	return dirs[len(dirs)-1]
 }
 
-// ListVersions enumerates all the versions currently available for linking.
-func (d *Deployment) ListVersions() []string {
+// GetDeployedVersions enumerates all the versions currently available for linking.
+func (d *Deployment) GetDeployedVersions() []string {
 
 	var versionList []string
 

@@ -204,8 +204,8 @@ func TestDeploymentOperations(t *testing.T) {
 	}
 
 	// List the versions available.
-	if versionList := dep.ListVersions(); len(versionList) != 3 {
-		t.Errorf("ListVersions failed: expected 3, got %v", versionList)
+	if versionList := dep.GetDeployedVersions(); len(versionList) != 3 {
+		t.Errorf("GetDeployedVersions failed: expected 3, got %v", versionList)
 	} else {
 		fmt.Println(versionList)
 	}
