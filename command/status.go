@@ -111,8 +111,7 @@ func (cmd *Status) Exec() *Result {
 		sort.Sort(versions)
 
 		// Iterate over the versions.
-		fmt.Printf("    Uploaded Versions:\n")
-		//for versionName, v := range ri.Versions {
+		fmt.Printf("  Uploaded Versions:\n")
 		for _, v := range versions {
 			released := "no "
 			if v.Released {
