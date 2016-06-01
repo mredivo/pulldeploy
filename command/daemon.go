@@ -206,7 +206,9 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			// First check whether the repository has changed since we last looked.
 			if canary, found := cmd.canary[an.Appname]; found && canary == ri.Canary {
 				cmd.lw.Debug("Canary unchanged for %q: %d", an.Appname, canary)
-				return
+				// Returning here misses the case where the repository has not changed,
+				// but the local filesystem has. Log the message, but keep going.
+				//return
 			}
 
 			// Determine whether any new versions have been deployed since we last checked.
