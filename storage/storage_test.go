@@ -12,9 +12,6 @@ const TESTAPP = "stubapp"
 
 func TestStorage(t *testing.T) {
 
-	var rs Storage
-	var err error
-
 	// An invalid AccessMethod should fail.
 	params := make(map[string]string)
 	if _, err := New("nosuchaccessmethod", params); err == nil {
@@ -22,9 +19,12 @@ func TestStorage(t *testing.T) {
 	} else {
 		fmt.Println(err.Error())
 	}
+}
+
+func TestStorageLocal(t *testing.T) {
 
 	// Exercise the Local access method.
-	params = make(map[string]string)
+	params := make(map[string]string)
 
 	// Test handling of initialization.
 	if _, err := New(KST_LOCAL, params); err == nil {
@@ -41,13 +41,17 @@ func TestStorage(t *testing.T) {
 
 	// Set up our local base directory, and run tests.
 	params["basedir"] = "../data/repository"
-	if rs, err = New(KST_LOCAL, params); err != nil {
+	if rs, err := New(KST_LOCAL, params); err != nil {
 		t.Errorf("%s storage initialization failed: %s", KST_LOCAL, err.Error())
+	} else {
+		testStorage(t, KST_LOCAL, rs)
 	}
-	testStorage(t, KST_LOCAL, rs)
+}
+
+func TestStorageS3(t *testing.T) {
 
 	// Exercise the S3 access method.
-	params = make(map[string]string)
+	params := make(map[string]string)
 
 	// Test handling of initialization.
 	if _, err := New(KST_S3, params); err == nil {
@@ -67,10 +71,11 @@ func TestStorage(t *testing.T) {
 		params["awsregion"] = "us-east-1"
 		params["bucket"] = "change-pulldeploy-test"
 		params["prefix"] = "unittest"
-		if rs, err = New(KST_S3, params); err != nil {
+		if rs, err := New(KST_S3, params); err != nil {
 			t.Errorf("%s storage initialization failed: %s", KST_S3, err.Error())
+		} else {
+			testStorage(t, KST_S3, rs)
 		}
-		testStorage(t, KST_S3, rs)
 	}
 }
 
@@ -141,5 +146,15 @@ func testStorage(t *testing.T, am AccessMethod, rs Storage) {
 			t.Errorf("%s Get() error: expected %q, got %q",
 				am, string(sampleBytes), string(data))
 		}
+	}
+
+	// Delete a file.
+	if err := rs.Delete(sampleFilename1); err != nil {
+		t.Errorf(err.Error())
+	}
+	if _, err := rs.Get(sampleFilename1); err == nil {
+		t.Errorf("%s Get() should have failed for deleted file", am)
+	} else {
+		fmt.Println(err.Error())
 	}
 }

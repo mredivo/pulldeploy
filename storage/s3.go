@@ -105,6 +105,11 @@ func (st *stS3) PutReader(repoPath string, rc io.ReadCloser, length int64) error
 	)
 }
 
+// Delete removes a repository file.
+func (st *stS3) Delete(repoPath string) error {
+	return st.bucket.Del(st.makeS3Path(repoPath))
+}
+
 // Utility helper to generate a full S3 repository path.
 func (st *stS3) makeS3Path(repoPath string) string {
 	if st.pathPrefix == "" {

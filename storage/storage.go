@@ -16,6 +16,7 @@ type Storage interface {
 	Put(repoPath string, data []byte) error                          // Write data to a repository file
 	GetReader(repoPath string) (io.ReadCloser, error)                // Open a stream to read a repository file
 	PutReader(repoPath string, rc io.ReadCloser, length int64) error // Write a stream to a repository file
+	Delete(repoPath string) error                                    // Delete a repository file
 }
 
 // AccessMethod indicates where the repository data should be stored.

@@ -98,6 +98,18 @@ func (st *stLocal) PutReader(repoPath string, rc io.ReadCloser, length int64) er
 	return nil
 }
 
+// Delete removes a repository file.
+func (st *stLocal) Delete(repoPath string) error {
+
+	// Generate the filename, and check that path exists.
+	fullPath, exists := makeLocalPath(st.baseDir, repoPath)
+	if !exists {
+		return fmt.Errorf("Not found: %s", fullPath)
+	}
+
+	return os.Remove(fullPath)
+}
+
 // Utility helper to generate a local repository full path.
 func makeLocalPath(baseDir, repoPath string) (string, bool) {
 	fullpath := path.Join(baseDir, repoPath)
