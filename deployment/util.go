@@ -21,6 +21,28 @@ func absPath(candidate string) string {
 	return s
 }
 
+// The values that are to be substituted into command line arguments.
+type varValues struct {
+	artifactPath string // var: #ARTIFACTPATH#
+	versionDir   string // var: #VERSIONDIR#
+}
+
+// Utility helper to perform substitutions for supported command arguments.
+func substituteVars(argsIn []string, values varValues) []string {
+	var argsOut = make([]string, 0)
+	for _, s := range argsIn {
+		switch s {
+		case "#ARTIFACTPATH#":
+			argsOut = append(argsOut, values.artifactPath)
+		case "#VERSIONDIR#":
+			argsOut = append(argsOut, values.versionDir)
+		default:
+			argsOut = append(argsOut, s)
+		}
+	}
+	return argsOut
+}
+
 // Utility helper to execute a system command.
 func sysCommand(curDir string, command string, args []string) (string, error) {
 

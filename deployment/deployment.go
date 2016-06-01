@@ -248,21 +248,10 @@ func (d *Deployment) Extract(version string) error {
 		}
 	}
 
-	// Build the argument list for the extract command.
-	var extractArgs = make([]string, 0)
-	for _, s := range d.acfg.Extract.Args {
-		switch s {
-		case "#ARTIFACTPATH#":
-			extractArgs = append(extractArgs, artifactPath)
-		case "#VERSIONDIR#":
-			extractArgs = append(extractArgs, versionDir)
-		default:
-			extractArgs = append(extractArgs, s)
-		}
-	}
-
 	// Extract the archive into the version directory.
-	_, err := sysCommand("", d.acfg.Extract.Cmd, extractArgs)
+	cmdlineArgs := substituteVars(d.acfg.Extract.Args,
+		varValues{artifactPath: artifactPath, versionDir: versionDir})
+	_, err := sysCommand("", d.acfg.Extract.Cmd, cmdlineArgs)
 	if err != nil {
 		return fmt.Errorf("Cannot extract archive %q into %q: %s", artifactPath, versionDir, err.Error())
 	}
@@ -294,8 +283,11 @@ func (d *Deployment) PostDeploy(version string) (string, error) {
 			d.appName)
 	}
 	if d.cfg.Scripts["postdeploy"].Cmd != "" {
+		artifactPath, _ := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
-		return sysCommand(versionDir, d.cfg.Scripts["postdeploy"].Cmd, d.cfg.Scripts["postdeploy"].Args)
+		cmdlineArgs := substituteVars(d.cfg.Scripts["postdeploy"].Args,
+			varValues{artifactPath: artifactPath, versionDir: versionDir})
+		return sysCommand(versionDir, d.cfg.Scripts["postdeploy"].Cmd, cmdlineArgs)
 	}
 	return "", nil
 }
@@ -308,8 +300,11 @@ func (d *Deployment) PostRelease(version string) (string, error) {
 			d.appName)
 	}
 	if d.cfg.Scripts["postrelease"].Cmd != "" {
+		artifactPath, _ := makeArtifactPath(d.artifactDir, d.appName, version, d.acfg.Extension)
 		versionDir, _ := makeReleasePath(d.releaseDir, version)
-		return sysCommand(versionDir, d.cfg.Scripts["postrelease"].Cmd, d.cfg.Scripts["postrelease"].Args)
+		cmdlineArgs := substituteVars(d.cfg.Scripts["postrelease"].Args,
+			varValues{artifactPath: artifactPath, versionDir: versionDir})
+		return sysCommand(versionDir, d.cfg.Scripts["postrelease"].Cmd, cmdlineArgs)
 	}
 	return "", nil
 }
