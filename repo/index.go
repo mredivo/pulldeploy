@@ -87,12 +87,39 @@ func (ri *Index) SetVersion(versionName string, version *Version) error {
 	return nil
 }
 
-// RmVersion removes a version from the index.
+// RmVersion removes a version from the index and from all environments.
 func (ri *Index) RmVersion(versionName string) error {
+
+	// The version must be present.
 	if _, err := ri.GetVersion(versionName); err != nil {
 		return err
 	}
-	delete(ri.Versions, versionName)
+
+	// Query every environment to determine whether the version is in use.
+	usedBy := make([]string, 0)
+	for envName, env := range ri.Envs {
+		if !env.isPurgable(versionName) {
+			usedBy = append(usedBy, envName)
+		}
+	}
+	if len(usedBy) > 0 {
+		return fmt.Errorf("Version %q in use in %s", versionName, strings.Join(usedBy, ", "))
+	}
+
+	// Remove the version from all environments.
+	errCount := 0
+	for _, env := range ri.Envs {
+		if err := env.purgeVersion(versionName); err != nil {
+			errCount++
+		}
+	}
+
+	// Remove the version from the versions list.
+	if errCount == 0 {
+		delete(ri.Versions, versionName)
+	} else {
+		return fmt.Errorf("Version %q not completely purged", versionName)
+	}
 	return nil
 }
 

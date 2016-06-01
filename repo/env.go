@@ -157,3 +157,35 @@ func (env *Env) releasePreview(versionName string, previewers []string) error {
 	env.Previewers = previewers
 	return nil
 }
+
+func (env *Env) isPurgable(versionName string) bool {
+	if versionName == env.Current || versionName == env.Prior || versionName == env.Preview {
+		return false
+	}
+	return true
+}
+
+func (env *Env) purgeVersion(versionName string) error {
+
+	if versionName == env.Current || versionName == env.Prior || versionName == env.Preview {
+		return fmt.Errorf("version %q in use", versionName)
+	}
+
+	deployed := make([]HistEvent, 0)
+	for _, histEvent := range env.Deployed {
+		if histEvent.Version != versionName {
+			deployed = append(deployed, histEvent)
+		}
+	}
+	env.Deployed = deployed
+
+	released := make([]HistEvent, 0)
+	for _, histEvent := range env.Released {
+		if histEvent.Version != versionName {
+			released = append(released, histEvent)
+		}
+	}
+	env.Released = released
+
+	return nil
+}

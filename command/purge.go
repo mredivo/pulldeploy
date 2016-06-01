@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
+	"github.com/mredivo/pulldeploy/storage"
 )
 
 // pulldeploy purge -app=<app> -version=<version>
@@ -41,6 +42,37 @@ func (cmd *Purge) CheckArgs(cmdName string, pdcfg pdconfig.PDConfig, osArgs []st
 }
 
 func (cmd *Purge) Exec() *Result {
-	placeHolder("purge(%s, %s)\n", cmd.appName, cmd.appVersion)
+
+	// Ensure the app definition exists.
+	if _, err := cmd.pdcfg.GetAppConfig(cmd.appName); err != nil {
+		cmd.result.AppendError(err)
+		return cmd.result
+	}
+
+	// Get access to the repo storage.
+	stgcfg := cmd.pdcfg.GetStorageConfig()
+	stg, err := storage.New(storage.AccessMethod(stgcfg.AccessMethod), stgcfg.Params)
+	if err != nil {
+		cmd.result.AppendError(err)
+		return cmd.result
+	}
+
+	// Retrieve the repository index.
+	if ri, err := getRepoIndex(stg, cmd.appName); err == nil {
+
+		// Purge the version from the index and all environments.
+		if err := ri.RmVersion(cmd.appVersion); err != nil {
+			cmd.result.AppendError(err)
+			return cmd.result
+		}
+
+		// Write the index back.
+		if err := setRepoIndex(stg, ri); err != nil {
+			cmd.result.AppendError(err)
+		}
+	} else {
+		cmd.result.AppendError(err)
+	}
+
 	return cmd.result
 }

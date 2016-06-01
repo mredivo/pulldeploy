@@ -2,8 +2,6 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/mredivo/pulldeploy/pdconfig"
 	"github.com/mredivo/pulldeploy/repo"
 	"github.com/mredivo/pulldeploy/storage"
@@ -39,10 +37,6 @@ func setRepoIndex(stg storage.Storage, ri *repo.Index) error {
 	} else {
 		return err
 	}
-}
-
-func placeHolder(format string, a ...interface{}) {
-	fmt.Printf("NOTIMPLEMENTED: "+format, a...)
 }
 
 func subtractArray(minuend, subtrahend []string) []string {
