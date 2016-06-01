@@ -215,7 +215,9 @@ func (cmd *Daemon) synchronize(an signaller.Notification) {
 			localVersionList := dplmt.GetDeployedVersions()
 			var deployedVersionList []string
 			for _, v := range env.Deployed {
-				deployedVersionList = append(deployedVersionList, v.Version)
+				if vers, err := ri.GetVersion(v.Version); err == nil && vers.Enabled {
+					deployedVersionList = append(deployedVersionList, v.Version)
+				}
 			}
 			newDeployments := subtractArray(deployedVersionList, localVersionList)
 			cmd.lw.Debug("Deployments for %s in %s: local=%v, repo=%v new=%v",
