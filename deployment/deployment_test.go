@@ -23,7 +23,7 @@ func (p *mypdConfig) GetArtifactConfig(artifactType string) (*pdconfig.ArtifactC
 	default:
 		ac.Extract.Cmd = "/bin/tar"
 	}
-	ac.Extract.Args = []string{"zxf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#"}
+	ac.Extract.Args = []string{"zxpf", "#ARTIFACTPATH#", "-C", "#VERSIONDIR#"}
 	return &ac, nil
 }
 
