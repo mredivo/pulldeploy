@@ -83,12 +83,14 @@ func New(appName string, pdcfg pdconfig.PDConfig, cfg *pdconfig.AppConfig) (*Dep
 	// Derive the UID/GID from the username/groupname.
 	// NOTE: Go doesn't yet support looking up a GID from a name, so
 	//       we use the gid from the user.
-	if user, err := user.Lookup(d.cfg.User); err == nil {
-		if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
-			d.uid = int(i)
-		}
-		if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
-			d.gid = int(i)
+	if d.cfg.User != "" {
+		if user, err := user.Lookup(d.cfg.User); err == nil {
+			if i, err := strconv.ParseInt(user.Uid, 10, 64); err == nil {
+				d.uid = int(i)
+			}
+			if i, err := strconv.ParseInt(user.Gid, 10, 64); err == nil {
+				d.gid = int(i)
+			}
 		}
 	}
 
@@ -234,7 +236,7 @@ func (d *Deployment) Extract(version string) error {
 		return fmt.Errorf("Artifact does not exist: %s", artifactPath)
 	}
 
-	// Ensure the extract command wasn't loaded from an insecure file.
+	// If running as root, ensure the extract command wasn't loaded from an insecure file.
 	if os.Geteuid() == 0 && d.acfg.Insecure {
 		return fmt.Errorf(
 			"Refusing to execute extract command from insecure \"pulldeploy.yaml\" as root")
