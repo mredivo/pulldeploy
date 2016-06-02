@@ -62,3 +62,11 @@ This builds the application into the ./build directory, from where it can be exe
 
 * See the Wiki for notes on installing PullDeploy in a production environment.
 * See the GoDocs for a command line synopsis, or execute `./build/pulldeploy help`
+
+## Credits
+
+PullDeploy owes its inspiration to a number of different pull-deploy tools I used
+in my time at Zynga. It ended up quite different in implementation, but does the
+same basic job.
+
+PullDeploy owes its existence to the generosity and support of Change.org.
