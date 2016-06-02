@@ -64,7 +64,7 @@ func findConfigDir() (string, error) {
 	}
 }
 
-// When running as root, configurations must be secure.
+// When running as root, configurations must writable only by root.
 func isInsecure(filepath string) bool {
 
 	isInsecure := false

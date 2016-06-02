@@ -106,7 +106,7 @@ func makeDir(name string, uid, gid int, perm os.FileMode) error {
 // Utility helper to set the owner of a file.
 func setOwner(name string, uid, gid int) error {
 
-	// We must be root, and we don't change ownership to root.
+	// We only do this as root, and we don't change ownership to root.
 	if os.Geteuid() == 0 {
 		if uid != 0 && gid != 0 {
 			if err := os.Chown(name, uid, gid); err != nil {
@@ -123,21 +123,28 @@ func setOwner(name string, uid, gid int) error {
 // Utility helper to set the owner of a directory subtree.
 func setOwnerAll(dir string, uid, gid int) error {
 
-	// We must be root, and we don't change ownership to root.
+	// We only do this as root, and we don't change ownership to root.
 	if os.Geteuid() == 0 {
+
+		errorCount := 0
 		if uid != 0 && gid != 0 {
 
 			// Visitor to do the actual work.
 			var setOwnerFunc = func(path string, info os.FileInfo, err error) error {
 				if err == nil {
 					if err := os.Chown(path, uid, gid); err != nil {
-						//fmt.Printf("unable to change owner to %d:%d: %s", uid, gid, path)
+						errorCount++
 					}
 				}
 				return nil
 			}
 
+			// Visit every file and directory in the subtree.
 			filepath.Walk(dir, setOwnerFunc)
+
+			if errorCount > 0 {
+				return fmt.Errorf("unable to change owner to %d:%d: for %d file(s)", uid, gid, errorCount)
+			}
 		} else {
 			return fmt.Errorf("refusing to set owner to %d:%d: %s", uid, gid, dir)
 		}
