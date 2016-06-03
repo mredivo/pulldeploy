@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -105,6 +106,15 @@ func TestIndexVersions(t *testing.T) {
 	versionName := "1.0.1"
 	ri := NewIndex("Example_App")
 
+	// Ensure that minimum number of versions to keep is not zero.
+	if err := ri.AddEnv("dummy"); err != nil {
+		t.Errorf("Index AddEnv failed: %s", err.Error())
+	}
+
+	onDelete := func(versionName string) {
+		fmt.Printf("Version %q removed from list\n", versionName)
+	}
+
 	// Test GetVersion/RmVersion while the list is empty.
 	if _, err := ri.GetVersion(versionName); err == nil {
 		t.Errorf("Index GetVersion should have failed")
@@ -115,10 +125,10 @@ func TestIndexVersions(t *testing.T) {
 	}
 
 	// Add a version.
-	if err := ri.AddVersion(versionName, "foo.tar.gz", true); err != nil {
+	if err := ri.AddVersion(versionName, "foo.tar.gz", true, onDelete); err != nil {
 		t.Errorf("Index AddVersion failed: %s", err.Error())
 	}
-	if err := ri.AddVersion(versionName, "foo.tar.gz", true); err == nil {
+	if err := ri.AddVersion(versionName, "foo.tar.gz", true, onDelete); err == nil {
 		t.Errorf("Index AddVersion should have failed as duplicate")
 	}
 	if len(ri.Versions) != 1 {
@@ -126,7 +136,7 @@ func TestIndexVersions(t *testing.T) {
 	}
 
 	// Add another version, to make sure following tests work in that case.
-	if err := ri.AddVersion("1.0.2", "foo.tar.gz", true); err != nil {
+	if err := ri.AddVersion("1.0.2", "foo.tar.gz", true, onDelete); err != nil {
 		t.Errorf("Index AddVersion failed: %s", err.Error())
 	}
 	if len(ri.Versions) != 2 {

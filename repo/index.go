@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+// The type of the callback called when versions age out of the repo.
+type versionOnDelete func(versionName string)
+
 // Index is the repository index for an application.
 type Index struct {
 	appName  string              // The name of the application in this index
@@ -65,11 +68,55 @@ func (ri *Index) RmEnv(envName string) error {
 }
 
 // AddVersion initializes a new version and adds it into the index.
-func (ri *Index) AddVersion(versionName, fileName string, enabled bool) error {
+func (ri *Index) AddVersion(versionName, fileName string, enabled bool, onDelete versionOnDelete) error {
+
 	if _, err := ri.GetVersion(versionName); err == nil {
 		return fmt.Errorf("version %q already present", versionName)
 	}
+
+	// Determine the minimum number of version entries that must be kept.
+	minCount := 0
+	for _, env := range ri.Envs {
+		if env.Keep > minCount {
+			minCount = env.Keep
+		}
+	}
+
+	// Get versions, oldest first, and determine how many we currently have.
+	versions := ri.VersionList("asc")
+	curCount := len(versions)
+
+	// Remove unreferenced versions until we reach the minimum count.
+	for _, vers := range versions {
+		if curCount < minCount {
+			break
+		}
+
+		// Check for references in each environment.
+		referenced := false
+		for _, env := range ri.Envs {
+			for _, histEvent := range env.Deployed {
+				if vers.Name == histEvent.Version {
+					referenced = true
+					break
+				}
+			}
+			if referenced {
+				break
+			}
+		}
+
+		// If unreferenced, remove it from the list.
+		if !referenced {
+			onDelete(vers.Name)
+			delete(ri.Versions, vers.Name)
+			curCount--
+		}
+	}
+
+	// Now add the new version (which is of course unreferenced so far).
 	ri.SetVersion(versionName, newVersion(versionName, fileName, enabled))
+
 	return nil
 }
 

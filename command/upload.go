@@ -2,7 +2,6 @@ package command
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/mredivo/pulldeploy/deployment"
@@ -80,7 +79,7 @@ func (cmd *Upload) Exec() *Result {
 	if ac, err := cmd.pdcfg.GetArtifactConfig(appCfg.ArtifactType); err == nil {
 		extension = ac.Extension
 	} else {
-		cmd.result.AppendError(fmt.Errorf("Invalid ArtifactType for app: %q", appCfg.ArtifactType))
+		cmd.result.Errorf("Invalid ArtifactType for app: %q", appCfg.ArtifactType)
 		return cmd.result
 	}
 
@@ -119,8 +118,16 @@ func (cmd *Upload) Exec() *Result {
 				return cmd.result
 			}
 
+			// This callback will be called for each entry purged from the repository.
+			onDelete := func(versionName string) {
+				if vers, err := ri.GetVersion(versionName); err == nil {
+					stg.Delete(ri.ArtifactPath(vers.Filename))
+					stg.Delete(ri.HMACPath(vers.Filename))
+				}
+			}
+
 			// Update the index.
-			if err := ri.AddVersion(cmd.appVersion, repoFilename, !cmd.disabled); err != nil {
+			if err := ri.AddVersion(cmd.appVersion, repoFilename, !cmd.disabled, onDelete); err != nil {
 				cmd.result.AppendError(err)
 				return cmd.result
 			}
