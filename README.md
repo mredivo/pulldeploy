@@ -10,19 +10,37 @@ deploys and releases those packages on their target hosts.
 
 ## Features
 
-* After daemon is installed, no further interaction with application hosts is required
-* Artifact repository management can be automated in CI, or done from laptops
-* Artifact repository is normally in S3, but can reside elsewhere
-* Artifacts can be signed, and will not be deployed if HMAC checking fails
-* Versions can have arbitrary names; VCS SHA1, CI build number, etc.
-* Deployment can be to a subset of the hosts running an application
+*General*
+
+* Application servers fetch the app and release it automatically and unattended; no server enumeration required
+* Releases can be to a subset of the hosts running an application
+* Rollback is as easy as re-releasing a previous version
+
+*Management*
+
+* All management is done through a command line utility
+* Repository management can be automated in CI, or done manually from laptops
+* Artifacts are stored in Amazon S3 (with provision for alternate storage)
+
+*Configurability*
+
+* Versions can have arbitrary names; VCS SHA or revision, CI build number, etc.
+* Custom artifact types can be defined, along with the command to unpack them
 * Multiple applications can be managed on one application host
-* No commands or the like from the artifact repository are trusted, other than the application itself
+
+*Security*
+
+* Artifacts are signed, and will not be deployed if HMAC checking fails
+* Ownership of all deployed files is set to specified (non-root) user
+* No commands from the artifact repository are trusted, other than the application itself
+* Command line utilities do not require root privileges
+* When run as root, daemon will not execute commands from insecure configuration files
+* Daemon can be run as non-root (provided the client app can be restarted as non-root)
 
 ## Terminology
 
-"I'm going to deploy a new version of the Foo application to the stage environment,
-and release it at 2:00pm. The artifact is already in the repository."
+"I'm going to deploy a new version of the Foo application to the staging environment,
+and release it at 2:00pm. The artifact has already been uploaded to the repository."
 
 ## Developer Setup
 
@@ -57,7 +75,7 @@ make
 This builds the application into the ./build directory, from where it can be executed:
 
 ```
-./build/pulldeploy daemon -env=stage
+./build/pulldeploy daemon -env=staging
 ```
 
 * See the Wiki for notes on installing PullDeploy in a production environment.
