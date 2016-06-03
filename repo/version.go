@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+// A sortable type for sorting versions.
+type versionsByTimestamp []Version
+
+func (vbt versionsByTimestamp) Len() int           { return len(vbt) }
+func (vbt versionsByTimestamp) Swap(i, j int)      { vbt[i], vbt[j] = vbt[j], vbt[i] }
+func (vbt versionsByTimestamp) Less(i, j int) bool { return vbt[i].TS.After(vbt[j].TS) }
+
 // Version provides version and filename information for uploaded files.
 type Version struct {
 	Name     string    `json:"version"`   // The name of the version, expected to be similar to "1.0.0"

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -121,6 +122,16 @@ func (ri *Index) RmVersion(versionName string) error {
 		return fmt.Errorf("Version %q not completely purged", versionName)
 	}
 	return nil
+}
+
+// VersionList returns an array of versions ordered by timestamp descending.
+func (ri *Index) VersionList() []Version {
+	var versions versionsByTimestamp
+	for _, v := range ri.Versions {
+		versions = append(versions, *v)
+	}
+	sort.Sort(versions)
+	return versions
 }
 
 // IndexPath returns the canonical path to the app's index in the repository.

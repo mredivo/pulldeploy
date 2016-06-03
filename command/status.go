@@ -7,16 +7,8 @@ import (
 	"time"
 
 	"github.com/mredivo/pulldeploy/pdconfig"
-	"github.com/mredivo/pulldeploy/repo"
 	"github.com/mredivo/pulldeploy/storage"
 )
-
-// A sortable type for sorting versions.
-type versionsByTimestamp []repo.Version
-
-func (vbt versionsByTimestamp) Len() int           { return len(vbt) }
-func (vbt versionsByTimestamp) Swap(i, j int)      { vbt[i], vbt[j] = vbt[j], vbt[i] }
-func (vbt versionsByTimestamp) Less(i, j int) bool { return vbt[i].TS.After(vbt[j].TS) }
 
 // pulldeploy status -app=<app>
 type Status struct {
@@ -103,16 +95,9 @@ func (cmd *Status) Exec() *Result {
 			}
 		}
 
-		// Order the versions by timestamp descending.
-		var versions versionsByTimestamp
-		for _, v := range ri.Versions {
-			versions = append(versions, *v)
-		}
-		sort.Sort(versions)
-
 		// Iterate over the versions.
 		fmt.Printf("  Uploaded Versions:\n")
-		for _, v := range versions {
+		for _, v := range ri.VersionList() {
 			released := "no "
 			if v.Released {
 				released = "yes"
