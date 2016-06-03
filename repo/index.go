@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"sort"
 	"strings"
 )
 
@@ -124,13 +123,23 @@ func (ri *Index) RmVersion(versionName string) error {
 	return nil
 }
 
-// VersionList returns an array of versions ordered by timestamp descending.
-func (ri *Index) VersionList() []Version {
-	var versions versionsByTimestamp
+// VersionList returns an array of versions ordered by timestamp.
+func (ri *Index) VersionList(order string) []Version {
+	var versions []Version
 	for _, v := range ri.Versions {
 		versions = append(versions, *v)
 	}
-	sort.Sort(versions)
+	ascending := func(v1, v2 *Version) bool {
+		return v2.TS.After(v1.TS)
+	}
+	descending := func(v1, v2 *Version) bool {
+		return v1.TS.After(v2.TS)
+	}
+	if order == "desc" {
+		sortVersionsBy(descending).Sort(versions)
+	} else {
+		sortVersionsBy(ascending).Sort(versions)
+	}
 	return versions
 }
 

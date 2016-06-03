@@ -1,15 +1,33 @@
 package repo
 
 import (
+	"sort"
 	"time"
 )
 
-// A sortable type for sorting versions.
-type versionsByTimestamp []Version
+//sortVersionsBy is the type of a "less" function for ordering versions.
+type sortVersionsBy func(v1, v2 *Version) bool
 
-func (vbt versionsByTimestamp) Len() int           { return len(vbt) }
-func (vbt versionsByTimestamp) Swap(i, j int)      { vbt[i], vbt[j] = vbt[j], vbt[i] }
-func (vbt versionsByTimestamp) Less(i, j int) bool { return vbt[i].TS.After(vbt[j].TS) }
+func (by sortVersionsBy) Sort(versions []Version) {
+	vs := &versionSorter{versions: versions, by: by}
+	sort.Sort(vs)
+}
+
+// A sorter for sorting versions.
+type versionSorter struct {
+	versions []Version
+	by       sortVersionsBy
+}
+
+func (vs *versionSorter) Len() int {
+	return len(vs.versions)
+}
+func (vs *versionSorter) Swap(i, j int) {
+	vs.versions[i], vs.versions[j] = vs.versions[j], vs.versions[i]
+}
+func (vs *versionSorter) Less(i, j int) bool {
+	return vs.by(&vs.versions[i], &vs.versions[j])
+}
 
 // Version provides version and filename information for uploaded files.
 type Version struct {

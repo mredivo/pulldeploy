@@ -97,7 +97,7 @@ func (cmd *Status) Exec() *Result {
 
 		// Iterate over the versions.
 		fmt.Printf("  Uploaded Versions:\n")
-		for _, v := range ri.VersionList() {
+		for _, v := range ri.VersionList("desc") {
 			released := "no "
 			if v.Released {
 				released = "yes"
