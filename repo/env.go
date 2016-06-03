@@ -34,10 +34,8 @@ func (env *Env) SetKeep(keep int) {
 	env.Keep = keep
 }
 
-type deployOnDelete func(versionName string)
-
 // Deploy makes an uploaded artifact available in this environment.
-func (env *Env) Deploy(versionName string, onDelete deployOnDelete) error {
+func (env *Env) Deploy(versionName string) error {
 
 	// Ensure that this version of the artifact is not already deployed.
 	for _, v := range env.Deployed {
@@ -72,7 +70,6 @@ func (env *Env) Deploy(versionName string, onDelete deployOnDelete) error {
 			}
 		}
 		if candidate >= 0 {
-			onDelete(env.Deployed[candidate].Version)
 			env.Deployed = append(env.Deployed[:candidate], env.Deployed[candidate+1:]...)
 		}
 	}

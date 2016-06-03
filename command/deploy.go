@@ -85,15 +85,8 @@ func (cmd *Deploy) Exec() *Result {
 			cmd.result.AppendError(err)
 			return cmd.result
 		} else {
-			// This callback will be called for each entry purged from environment.
-			onDelete := func(versionName string) {
-				if vers, err := ri.GetVersion(versionName); err == nil {
-					repoPath := ri.ArtifactPath(vers.Filename)
-					_ = repoPath // TODO: Implement storage deletions.
-				}
-			}
 			// Add this one to the list of deployed versions.
-			if err := env.Deploy(cmd.appVersion, onDelete); err != nil {
+			if err := env.Deploy(cmd.appVersion); err != nil {
 				cmd.result.AppendError(err)
 				return cmd.result
 			}
